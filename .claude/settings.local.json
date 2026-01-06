@@ -1,0 +1,23 @@
+{
+  "disabledMcpjsonServers": [
+    "linear-server",
+    "github",
+    "vercel",
+    "ide",
+    "sequential-thinking",
+    "playwright",
+    "Context7",
+    "supabase",
+    "claude-context",
+    "browser-tools"
+  ],
+  "enabledMcpjsonServers": [
+    "sequential-thinking",
+    "playwright",
+    "Context7",
+    "supabase",
+    "claude-context",
+    "browser-tools"
+  ],
+  "enableAllProjectMcpServers": true
+}
