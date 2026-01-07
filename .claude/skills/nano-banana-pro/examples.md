@@ -349,3 +349,211 @@ Real-world examples showing prompt optimization based on Google DeepMind's 2025 
 **Result:** "Ceramic coffee mug on oak table. Steam rising. Soft morning light. Shallow depth f/2.8. Commercial product photography."
 
 ✅ 17 words, all elements covered, optimized for Nano Banana Pro
+
+---
+
+## Creative Transformation Examples
+
+### Example 14: Chibi Character
+
+**❌ Original Request:**
+"Turn my photo into a cute cartoon version with a big head"
+
+**✅ Optimized Prompt:**
+"Transform into 3D chibi character. Enlarged head, small body. Soft pastel colors. Matte finish. White background."
+
+**Why Better:**
+- Specific style name (chibi)
+- Material finish specified
+- Clean background for product use
+
+**Parameters:**
+- Model: `pro`
+- Size: `2K`
+- Aspect: `1:1`
+- Reference: `--reference selfie.jpg`
+
+---
+
+### Example 15: Crystal Ball Scene
+
+**❌ Original Request:**
+"Put a city inside a glass ball, make it look magical"
+
+**✅ Optimized Prompt:**
+"Clear crystal ball containing miniature Tokyo cityscape. Mystical inner glow. Glass reflections. Dark background. Macro lens."
+
+**Why Better:**
+- Specific city named
+- Lighting source defined (inner glow)
+- Photography style included
+
+**Parameters:**
+- Model: `pro`
+- Size: `4K`
+- Aspect: `1:1`
+
+---
+
+### Example 16: Enamel Pin Design
+
+**❌ Original Request:**
+"Make my logo into a pin design"
+
+**✅ Optimized Prompt:**
+"Logo as enamel pin. Gold metal outline. Glossy hard enamel sections. Slight 3D depth. Product shot on gray fabric."
+
+**Why Better:**
+- Material specifics (gold, hard enamel)
+- Texture defined (glossy)
+- Background context for product shot
+
+**Parameters:**
+- Model: `pro`
+- Size: `2K`
+- Aspect: `1:1`
+- Reference: `--reference logo.png`
+
+---
+
+### Example 17: Double Exposure Portrait
+
+**❌ Original Request:**
+"Blend my portrait with a forest scene artistically"
+
+**✅ Optimized Prompt:**
+"Double exposure portrait. Silhouette merged with misty forest. Ethereal mood. Muted earth tones. Fine art photography."
+
+**Why Better:**
+- Technique named (double exposure)
+- Mood specified
+- Color palette defined
+
+**Parameters:**
+- Model: `pro`
+- Size: `4K`
+- Aspect: `2:3`
+- Reference: `--reference portrait.jpg`
+
+---
+
+### Example 18: Steampunk Object
+
+**❌ Original Request:**
+"Make a mechanical fish with gears and stuff"
+
+**✅ Optimized Prompt:**
+"Mechanical fish. Brass gears, copper pipes, glass fins. Victorian steampunk. Warm amber lighting. Dark background."
+
+**Why Better:**
+- Specific materials listed
+- Era/style defined (Victorian)
+- Lighting creates mood
+
+**Parameters:**
+- Model: `pro`
+- Size: `4K`
+- Aspect: `16:9`
+
+---
+
+### Example 19: Tilt-Shift Miniature
+
+**❌ Original Request:**
+"Make a city look like a tiny model"
+
+**✅ Optimized Prompt:**
+"Tilt-shift photography. Dubai Marina from above. Miniature world effect. Vibrant saturated colors. 45-degree bird's-eye view."
+
+**Why Better:**
+- Technique named
+- Specific location
+- Exact camera angle
+
+**Parameters:**
+- Model: `pro`
+- Size: `4K`
+- Aspect: `16:9`
+
+---
+
+### Example 20: Glass Transformation
+
+**❌ Original Request:**
+"Make this object look like it's made of glass"
+
+**✅ Optimized Prompt:**
+"[Object] as transparent glass sculpture. Iridescent effects. Chromatic aberration. Studio HDRI. High contrast. White background."
+
+**Why Better:**
+- Post-processing effects named
+- Lighting type specified
+- Clean background for product use
+
+**Parameters:**
+- Model: `pro`
+- Size: `4K`
+- Aspect: `1:1`
+- Reference: `--reference object.jpg`
+
+---
+
+## Surreal & Conceptual Examples
+
+### Example 21: Cloud Art
+
+**❌ Original Request:**
+"Show an elephant made of clouds in the sky"
+
+**✅ Optimized Prompt:**
+"Elephant formed entirely by white cumulus clouds. Blue sky above Sahara desert. Photorealistic. Natural daylight. Wide-angle."
+
+**Why Better:**
+- Cloud type specified (cumulus)
+- Ground reference for context
+- Realism level defined
+
+**Parameters:**
+- Model: `pro`
+- Size: `4K`
+- Aspect: `16:9`
+
+---
+
+### Example 22: Pencil-to-Reality Blend
+
+**❌ Original Request:**
+"Mix a drawing with a real photo somehow"
+
+**✅ Optimized Prompt:**
+"Pencil sketch of cat interacting with realistic goldfish in bowl. Cat is grayscale hand-drawn. Fish is photorealistic full-color."
+
+**Why Better:**
+- Each element's style defined
+- Clear interaction described
+- Contrast creates interest
+
+**Parameters:**
+- Model: `pro`
+- Size: `4K`
+- Aspect: `3:2`
+
+---
+
+### Example 23: Artisan Keycap
+
+**❌ Original Request:**
+"Put a scene inside a keyboard key"
+
+**✅ Optimized Prompt:**
+"Translucent artisan keycap containing miniature Japanese garden. Koi pond, cherry blossom. Resin-encased. Soft internal glow. Product photo."
+
+**Why Better:**
+- Specific scene detailed
+- Material defined (resin)
+- Product photography context
+
+**Parameters:**
+- Model: `pro`
+- Size: `2K`
+- Aspect: `1:1`

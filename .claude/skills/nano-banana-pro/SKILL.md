@@ -148,6 +148,358 @@ Warm color grading. Shallow depth of field background blur.
 Square 1:1 composition.
 ```
 
+### 7. Character & Figure Design
+
+**Chibi/Q-Version:**
+```
+Transform photo into cute 3D chibi character. Enlarged head, small body.
+Soft pastel colors. Smooth matte finish. Studio lighting. White background.
+```
+
+**Anime Figure:**
+```
+Create anime-style figure based on attached character photo. Accurately reproduce
+full body posture, facial expression, and clothing style. PVC figure aesthetic.
+Display base included.
+```
+
+**Bobblehead:**
+```
+Convert selfie to bobblehead figure. Oversized head on spring neck. Cartoonified
+features. Glossy finish. Mounted on circular base. Product photography style.
+```
+
+### 8. Miniature & Diorama
+
+**Tilt-Shift Miniature:**
+```
+Tilt-shift photography effect. [SCENE] as miniature world. 45-degree bird's-eye view.
+Soft focus edges. Vibrant saturated colors. Tiny scale aesthetic.
+```
+
+**Keycap Diorama:**
+```
+Translucent artisan keycap containing miniature [SCENE]. Resin-encased world.
+Soft internal glow. Studio lighting. Product photography. 1:1 aspect ratio.
+```
+
+**Crystal Ball Scene:**
+```
+Clear crystal ball containing miniature [SCENE]. Mystical glow from within.
+Reflections on glass surface. Dark moody background. Macro photography style.
+```
+
+### 9. Object Transformations
+
+**Glass/Crystal Version:**
+```
+[OBJECT] rendered as transparent glass sculpture. Iridescent effects.
+Chromatic aberration. Studio HDRI lighting. High contrast. Floating on white.
+```
+
+**Enamel Pin Design:**
+```
+[SUBJECT] as enamel pin. Gold metal outline. Glossy colored sections.
+Hard enamel finish. Slight 3D depth. Product shot on fabric background.
+```
+
+**Mechanical/Steampunk:**
+```
+[OBJECT] reimagined with steampunk aesthetic. Brass gears, copper pipes,
+glass components. Victorian industrial. Detailed mechanical parts. Warm lighting.
+```
+
+### 10. Surreal & Conceptual
+
+**Double Exposure:**
+```
+Double exposure portrait. [PERSON] silhouette merged with [LANDSCAPE].
+Blended imagery. Artistic photography. Muted earth tones. Ethereal mood.
+```
+
+**Cloud Formation:**
+```
+[SUBJECT] formed entirely by white clouds. Floating in blue sky above [LANDMARK].
+Photorealistic clouds. Natural daylight. Wide-angle perspective.
+```
+
+**Pencil-to-Reality:**
+```
+Pencil sketch of [SUBJECT A] interacting with [SUBJECT B]. Subject A is
+hand-drawn grayscale. Subject B is photorealistic full-color. Blended seamlessly.
+```
+
+### 11. Fashion & Street Style
+
+**Ultra-Realistic Street Fashion:**
+```
+Street fashion portrait. Young woman in beige oversized jacket, baggy olive jeans.
+Warm afternoon sunlight. Urban background with bokeh. Shot on Sony A7IV, 85mm f/1.4.
+Instagram aesthetic. 8K resolution.
+```
+
+**High-Fashion Editorial:**
+```
+Editorial fashion portrait. Woman in elegant evening gown, red lipstick, smoky eye.
+Luxury car interior setting. Cinematic lighting, shallow depth of field.
+Editorial-grade, fashion magazine quality.
+```
+
+**Y2K Vintage Aesthetic:**
+```
+Y2K fashion photo. Direct flash, paparazzi vibe. Early-2000s styling.
+Red digital timestamp in corner. Film grain, soft contrast, warm highlights.
+Nostalgic disposable camera look.
+```
+
+### 12. Cinematic & Atmospheric
+
+**Cyberpunk Character:**
+```
+Cyberpunk assassin in neon-lit alley. Rain-soaked streets, holographic signs.
+Cinematic realism, shallow depth of field. Neo-noir atmosphere.
+Shot on Arri Alexa, anamorphic lens. 4K cinematic.
+```
+
+**Wong Kar-wai Stillness:**
+```
+Intimate portrait with Wong Kar-wai aesthetic. Melancholic mood, warm color grading.
+Soft focus, dreamy bokeh. Film grain texture. Nostalgic, contemplative atmosphere.
+```
+
+**2AM Tokyo Vibe:**
+```
+Late night balcony selfie. Tokyo cityscape bokeh in background. Neon reflections.
+Relaxed pose, authentic expression. Moody aesthetic, film grain.
+Natural available light. Raw, unfiltered look.
+```
+
+### 13. Mirror & Reflection Shots
+
+**Bathroom Mirror Selfie:**
+```
+Mirror selfie in modern bathroom. White subway tiles, soft diffused lighting.
+Phone visible in reflection. Accurate mirror physics. Film grain, moody aesthetic.
+Authentic casual pose. Instagram-ready composition.
+```
+
+### 14. Presentation & Slide Graphics
+
+**Professional Business Slide:**
+```
+Professional 16:9 slide design. Clean white background, modern typography.
+Structured sections with clear headings. Space for charts and icons.
+Corporate blue color scheme. Business presentation aesthetic.
+```
+
+**Technical Blueprint:**
+```
+Technical blueprint style 16:9 slide. Diagrams with annotated labels.
+Structured grid layout. Measurement lines and callouts.
+Dark blue background, white/cyan linework. Engineering aesthetic.
+```
+
+**Editorial Infographic:**
+```
+Modern editorial infographic style. 16:9 format. Visual story layout.
+Strong headline, multiple sections. Clean flat illustrations and icons.
+Bold typography. Magazine-quality design.
+```
+
+**Sketchnote Style:**
+```
+Sketchnote style 16:9 slide. Hand-drawn doodle aesthetic.
+Colorful icons and arrows. Whimsical typography.
+Playful illustrations. Educational yet engaging.
+```
+
+### 15. Infographics & Data Visualization
+
+**Statistical Data Infographic:**
+```
+Modern data infographic. Large bold numbers as focal points. Supporting icons.
+Clean minimal layout. [Color scheme] palette. Percentage bars and metrics.
+White background. Professional data visualization style.
+```
+
+**Timeline Infographic:**
+```
+Horizontal timeline infographic. [Topic] chronology from [start] to [end].
+Connected milestone points. Icons for each event. Color-coded periods.
+Clean modern design. Clear date labels. Visual progression.
+```
+
+**Comparison Infographic:**
+```
+Side-by-side comparison infographic. [Item A] vs [Item B].
+Two-column layout with matching categories. Check/cross icons.
+Contrasting colors for each side. Clear visual hierarchy.
+```
+
+**Process Flow Infographic:**
+```
+Step-by-step process infographic. [Number] stages with numbered circles.
+Connecting arrows between steps. Icon for each stage.
+Vertical or horizontal flow. Color gradient progression.
+```
+
+**Pie/Donut Chart Visualization:**
+```
+Modern donut chart infographic. [Topic] breakdown by percentage.
+Bold center statistic. Color-coded segments with labels.
+Clean legend. Flat design style. Data visualization aesthetic.
+```
+
+**Bar Chart Infographic:**
+```
+Horizontal bar chart infographic. [Topic] comparison data.
+Gradient colored bars. Value labels on each bar. Ranked order.
+Clean grid lines. Modern minimal style. Clear axis labels.
+```
+
+**Map-Based Infographic:**
+```
+Geographic data infographic. [Region] map with data overlay.
+Color-coded regions by value. Legend with scale. Key statistics callout.
+Clean cartographic style. Data markers for points of interest.
+```
+
+**Icon Grid Infographic:**
+```
+Icon-based statistics infographic. Grid of [number] human/object icons.
+Highlighted portion showing percentage. Large statistic number.
+Minimal design. Single accent color. Visual ratio representation.
+```
+
+**Hierarchical Infographic:**
+```
+Pyramid/hierarchy infographic. [Topic] levels from top to bottom.
+Layered sections with labels. Size indicates importance.
+Color gradient from top to base. Clean geometric shapes.
+```
+
+**List Infographic:**
+```
+Numbered list infographic. Top [number] [topic]. Large numbers as design elements.
+Icon beside each item. Brief description text. Alternating background colors.
+Modern editorial style. Easy-to-scan layout.
+```
+
+### 16. Social Media Graphics
+
+**Quote Card:**
+```
+Wide quote card featuring [person/topic]. [Color] background with [font style] text.
+Gradient portrait on left side. Quote text prominent. Author attribution below.
+Social media share-ready. Elegant typography.
+```
+
+**YouTube Thumbnail:**
+```
+YouTube thumbnail. [Subject] with exaggerated [expression]. Bold text "[TITLE]"
+on [position]. Bright saturated colors. High contrast. Eye-catching composition.
+Face taking 40% of frame. Clean gradient background.
+```
+
+**Instagram Carousel:**
+```
+Instagram carousel slide [number] of [total]. [Topic] content.
+Consistent [color] brand palette. Bold headline. Supporting text.
+Swipe indicator. Square 1:1 format. Clean modern design.
+```
+
+### 17. Comic & Storyboard
+
+**Comic Panel:**
+```
+Comic book panel. [Scene description]. Bold black outlines. Halftone dot shading.
+Speech bubble with "[dialogue]". Dynamic action lines. Vibrant pop colors.
+Classic comic book style.
+```
+
+**Manga Panel:**
+```
+Manga panel. [Character] in [action/emotion]. Black and white with screentones.
+Speed lines for motion. Expressive eyes. Japanese manga aesthetic.
+Right-to-left reading format.
+```
+
+**Storyboard Frame:**
+```
+Film storyboard frame. [Shot type]: [scene description].
+Rough sketch style. Arrow indicating camera movement.
+Aspect ratio markers. Scene number and description box. Pre-production aesthetic.
+```
+
+### 18. Game Assets
+
+**Game Character Sprite:**
+```
+2D game character sprite. [Character description]. Pixel art style.
+[Number]-color palette. Transparent background. Idle pose.
+Retro platformer aesthetic. Clean pixel edges.
+```
+
+**Game Item Icon:**
+```
+Game item icon. [Item type] for RPG inventory. Glossy rendered style.
+Gold border frame. Slight 3D depth. Dark background.
+64x64 pixel dimensions. Mobile game aesthetic.
+```
+
+**Game Environment Tile:**
+```
+Tileable game texture. [Environment type] surface. Seamless edges.
+Top-down perspective. [Art style]. Consistent lighting.
+Game-ready asset. Square format.
+```
+
+### 19. E-commerce & Product
+
+**Product Hero Shot:**
+```
+E-commerce hero image. [Product] floating on gradient background.
+Dramatic lighting with soft shadows. Multiple angles reflection.
+4K commercial quality. Clean isolated product photography.
+```
+
+**Lifestyle Product Shot:**
+```
+Lifestyle product photography. [Product] in use context.
+[Setting] environment. Natural lighting. Aspirational mood.
+Model interaction optional. Brand-elevating composition.
+```
+
+**Product Flat Lay:**
+```
+Flat lay product arrangement. [Products] on [surface].
+Top-down 90-degree angle. Styled props and accessories.
+Cohesive color story. Instagram-worthy composition.
+```
+
+### 20. Traditional Art Styles
+
+**Ukiyo-e Japanese:**
+```
+Ukiyo-e woodblock print style. [Subject] in traditional Japanese art aesthetic.
+Bold outlines, flat color areas. Wave patterns and nature elements.
+Edo period artistic style. Vintage paper texture.
+```
+
+**Art Nouveau:**
+```
+Art Nouveau style illustration. [Subject] with flowing organic lines.
+Decorative floral borders. Muted earth tones with gold accents.
+Alphonse Mucha inspired. Elegant feminine aesthetic.
+```
+
+**Bauhaus Poster:**
+```
+Bauhaus design style. [Subject] using geometric shapes.
+Primary colors: red, blue, yellow on white/black.
+Sans-serif typography. Modernist aesthetic. 1920s avant-garde.
+```
+
 ## Advanced Prompt Techniques
 
 ### Technical Photography Specifications
@@ -210,6 +562,139 @@ Professional headshot. Clean background.
 Avoid: harsh shadows, unnatural skin smoothing, oversaturation,
 busy backgrounds, lens distortion.
 ```
+
+### Common Negative Prompts
+
+Use these to improve quality by specifying what NOT to generate:
+
+**Quality Issues:**
+```
+Avoid: blurry, low quality, pixelated, jpeg artifacts, noise, grainy
+```
+
+**Anatomical Problems:**
+```
+Avoid: extra fingers, bad anatomy, distorted hands, missing limbs, mutated
+```
+
+**Skin/Texture Issues:**
+```
+Avoid: plastic skin, doll-like, oversmoothed, waxy, uncanny valley
+```
+
+**Style Conflicts:**
+```
+Avoid: cartoon, illustration, painting, 3D render, CGI, anime (when photorealistic)
+```
+
+**Unwanted Elements:**
+```
+Avoid: watermark, text, logo, signature, border, frame
+```
+
+### Character Preservation Techniques
+
+When maintaining facial identity across generations:
+
+**Strong Identity Lock:**
+```
+Keep facial features 100% identical to reference. Do NOT change the face.
+Maintain exact bone structure, eye shape, nose, and distinguishing features.
+[Then add your scene/style instructions...]
+```
+
+**Subtle Variations Allowed:**
+```
+Preserve core facial identity from reference. Allow natural expression changes.
+Maintain recognizable likeness while adapting to new pose/lighting.
+```
+
+**Multi-Reference Consistency:**
+```
+Using multiple reference images: maintain consistent identity across all.
+Face from ref1, pose inspiration from ref2, lighting style from ref3.
+Seamless integration, single unified character.
+```
+
+### JSON-Formatted Specifications
+
+For precise material and lighting control:
+```json
+{
+  "lighting": "studio HDRI, high intensity, angled top-left",
+  "material": "glass with transparent and iridescent effects",
+  "post_processing": "chromatic aberration, glow, high contrast",
+  "background": "pure white, soft gradient shadow"
+}
+```
+
+### Placeholder Variables
+
+Use brackets for reusable prompts:
+- `[SUBJECT]` — Main element to generate
+- `[STYLE]` — Visual aesthetic
+- `[LANDMARK]` — Specific location
+- `[MATERIAL]` — Surface/texture type
+
+### Material & Texture Descriptors
+
+**Surface finishes:**
+- `smooth polished` — Reflective, mirror-like
+- `matte finish` — Non-reflective, soft
+- `glossy chrome` — Metallic, shiny
+- `tactile felt` — Fabric-like texture
+- `frosted glass` — Translucent, diffused
+
+**Material types:**
+- `hard enamel` — Glossy filled sections
+- `brushed metal` — Directional texture
+- `resin-encased` — Clear plastic embedding
+- `ceramic glaze` — Pottery finish
+
+### Atmosphere & Mood Keywords
+
+**Emotional Tones:**
+- `melancholic` — Sad, reflective, bittersweet
+- `ethereal` — Otherworldly, dreamy, floating
+- `intimate` — Close, personal, vulnerable
+- `raw` — Unfiltered, honest, gritty
+- `nostalgic` — Wistful, reminiscent, vintage feel
+- `contemplative` — Thoughtful, quiet, introspective
+
+**Cinematic References:**
+- `Wong Kar-wai stillness` — Saturated colors, longing, urban romance
+- `Blade Runner neo-noir` — Neon, rain, dystopian
+- `Wes Anderson symmetry` — Centered, pastel, quirky
+- `Terrence Malick golden hour` — Natural light, poetic, wandering
+
+**Atmosphere Descriptors:**
+- `moody` — Low-key lighting, shadows, tension
+- `dreamy` — Soft focus, hazy, romantic
+- `gritty` — Textured, urban, realistic
+- `serene` — Calm, peaceful, balanced
+- `dramatic` — High contrast, intense, bold
+- `whimsical` — Playful, fantastical, light
+
+### Extended Technical Specifications
+
+**Resolution & Quality:**
+- `8K resolution` — Maximum detail
+- `4K DSLR quality` — Professional standard
+- `64K ultra-detailed` — Extreme close-up capable
+
+**Aperture Settings:**
+- `f/1.4` — Very shallow DOF, dreamy bokeh
+- `f/2.0` — Shallow DOF, subject isolation
+- `f/2.8` — Moderate DOF, balanced
+- `f/8` — Deep DOF, landscapes/architecture
+- `f/16` — Maximum sharpness throughout
+
+**Lighting Timestamps:**
+- `golden hour` — 1 hour after sunrise/before sunset
+- `blue hour` — 20-30 min after sunset
+- `high noon` — Harsh overhead, strong shadows
+- `2am vibe` — Artificial light, neon, moody
+- `bright morning` — Fresh, clean, energetic
 
 ## Pro Tips from Community
 
@@ -291,6 +776,10 @@ uv run generate-image.py --test     # Test generation
 
 ## Sources & Research
 
+- [YouMind Awesome Prompts](https://github.com/YouMind-OpenLab/awesome-nano-banana-pro-prompts) — 4,039 multilingual prompts
+- [NoteGPT Slides Prompts](https://notegpt.io/blog/nano-banana-pro-slides-prompts) — 20 presentation templates
+- [promptgather.io Spreadsheet](https://docs.google.com/spreadsheets/d/1GAp_yaqAX9y_K8lnGQw9pe_BTpHZehoonaxi4whEQIE/) — 900+ curated prompts with categories
+- [awesome-nano-banana](https://github.com/JimmyLv/awesome-nano-banana) — 100 curated prompt cases comparing Gemini & GPT-4o
 - [awesome-nanobanana-pro](https://github.com/ZeroLu/awesome-nanobanana-pro) — Community prompt collection
 - [Google Blog: Nano Banana Pro Tips](https://blog.google/products/gemini/prompting-tips-nano-banana-pro/)
 - [Google Developers: Gemini Image Best Practices](https://developers.googleblog.com/en/how-to-prompt-gemini-2-5-flash-image-generation-for-the-best-results/)
