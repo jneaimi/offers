@@ -1,0 +1,22 @@
+/* Terminal-specific styles */
+
+.xterm {
+  padding: 8px;
+}
+
+.xterm-viewport::-webkit-scrollbar {
+  width: 8px;
+}
+
+.xterm-viewport::-webkit-scrollbar-track {
+  background: #1a1b26;
+}
+
+.xterm-viewport::-webkit-scrollbar-thumb {
+  background: #414868;
+  border-radius: 4px;
+}
+
+.xterm-viewport::-webkit-scrollbar-thumb:hover {
+  background: #565f89;
+}

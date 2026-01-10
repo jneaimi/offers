@@ -1,4 +1,26 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(find:*)",
+      "WebFetch(domain:github.com)",
+      "Edit(.claude/implementation-plans/**)",
+      "Edit(.claude/knowledge-base/**)",
+      "WebSearch"
+    ],
+    "additionalDirectories": [
+      ".claude"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "sequential-thinking",
+    "playwright",
+    "Context7",
+    "supabase",
+    "claude-context",
+    "browser-tools"
+  ],
   "disabledMcpjsonServers": [
     "linear-server",
     "github",
@@ -11,13 +33,7 @@
     "claude-context",
     "browser-tools"
   ],
-  "enabledMcpjsonServers": [
-    "sequential-thinking",
-    "playwright",
-    "Context7",
-    "supabase",
-    "claude-context",
-    "browser-tools"
-  ],
-  "enableAllProjectMcpServers": true
+  "enabledPlugins": {
+    "frontend-design@claude-code-plugins": true
+  }
 }
