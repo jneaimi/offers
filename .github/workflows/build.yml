@@ -137,27 +137,38 @@ jobs:
           Copy-Item "offers-studio/src-tauri/target/release/genimage-studio.exe" "$packageDir/"
           Copy-Item "offers-studio/src-tauri/target/release/*.dll" "$packageDir/" -ErrorAction SilentlyContinue
 
-          # Create placeholder icons (44x44, 150x150, 310x150, StoreLogo)
-          $iconSrc = "offers-studio/src-tauri/icons/icon.ico"
+          # Create placeholder icons using System.Drawing
+          Add-Type -AssemblyName System.Drawing
 
-          # Use magick if available, otherwise copy ico
-          if (Get-Command magick -ErrorAction SilentlyContinue) {
-            magick "$iconSrc" -resize 44x44 "$packageDir/Assets/Square44x44Logo.png"
-            magick "$iconSrc" -resize 150x150 "$packageDir/Assets/Square150x150Logo.png"
-            magick "$iconSrc" -resize 310x150 "$packageDir/Assets/Wide310x150Logo.png"
-            magick "$iconSrc" -resize 50x50 "$packageDir/Assets/StoreLogo.png"
-          } else {
-            # Create simple colored PNGs as placeholders using PowerShell
-            Add-Type -AssemblyName System.Drawing
-            foreach ($size in @(@(44,44,"Square44x44Logo"), @(150,150,"Square150x150Logo"), @(310,150,"Wide310x150Logo"), @(50,50,"StoreLogo"))) {
-              $bmp = New-Object System.Drawing.Bitmap($size[0], $size[1])
-              $g = [System.Drawing.Graphics]::FromImage($bmp)
-              $g.Clear([System.Drawing.Color]::FromArgb(45, 45, 45))
-              $g.Dispose()
-              $bmp.Save("$packageDir/Assets/$($size[2]).png", [System.Drawing.Imaging.ImageFormat]::Png)
-              $bmp.Dispose()
-            }
+          $assetsDir = "$packageDir\Assets"
+          Write-Host "Creating assets in: $assetsDir"
+
+          # Ensure Assets directory exists
+          if (!(Test-Path $assetsDir)) {
+            New-Item -ItemType Directory -Force -Path $assetsDir | Out-Null
           }
+
+          $sizes = @(
+            @{Width=44; Height=44; Name="Square44x44Logo.png"},
+            @{Width=150; Height=150; Name="Square150x150Logo.png"},
+            @{Width=310; Height=150; Name="Wide310x150Logo.png"},
+            @{Width=50; Height=50; Name="StoreLogo.png"}
+          )
+
+          foreach ($size in $sizes) {
+            $bmp = New-Object System.Drawing.Bitmap($size.Width, $size.Height)
+            $g = [System.Drawing.Graphics]::FromImage($bmp)
+            $g.Clear([System.Drawing.Color]::FromArgb(64, 64, 64))
+            $g.Dispose()
+            $outputPath = Join-Path $assetsDir $size.Name
+            $bmp.Save($outputPath, [System.Drawing.Imaging.ImageFormat]::Png)
+            $bmp.Dispose()
+            Write-Host "Created: $outputPath"
+          }
+
+          # Verify assets exist
+          Write-Host "Assets directory contents:"
+          Get-ChildItem $assetsDir
 
           # Write manifest
           $manifest | Out-File -FilePath "$packageDir/AppxManifest.xml" -Encoding UTF8
