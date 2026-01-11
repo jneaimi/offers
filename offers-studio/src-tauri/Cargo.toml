@@ -1,6 +1,6 @@
 [package]
 name = "genimage-studio"
-version = "0.1.0"
+version = "0.1.1"
 description = "AI-powered image generation studio using Google Gemini"
 authors = ["Jneaimi"]
 edition = "2021"

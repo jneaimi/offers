@@ -85,7 +85,7 @@ jobs:
       - name: Create MSIX package
         shell: pwsh
         run: |
-          $version = "0.1.0"
+          $version = "0.1.1"
           $appName = "GenImageStudio"
           $publisher = "CN=Jneaimi"
           $msixDir = "offers-studio/src-tauri/target/release/bundle/msix"
