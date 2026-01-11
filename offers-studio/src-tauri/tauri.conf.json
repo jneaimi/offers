@@ -33,6 +33,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "publisher": "Jneaimi",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -42,7 +43,12 @@
     ],
     "resources": [
       "../bundled-resources"
-    ]
+    ],
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      }
+    }
   },
   "plugins": {}
 }
