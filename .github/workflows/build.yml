@@ -82,6 +82,95 @@ jobs:
         working-directory: offers-studio
         run: npm run tauri build
 
+      - name: Create MSIX package
+        shell: pwsh
+        run: |
+          $version = "0.1.0"
+          $appName = "GenImageStudio"
+          $publisher = "CN=Jneaimi"
+          $msixDir = "offers-studio/src-tauri/target/release/bundle/msix"
+          $nsisDir = "offers-studio/src-tauri/target/release/bundle/nsis"
+
+          # Create MSIX output directory
+          New-Item -ItemType Directory -Force -Path $msixDir
+
+          # Create AppxManifest.xml
+          $manifest = @"
+          <?xml version="1.0" encoding="utf-8"?>
+          <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+                   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+                   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities">
+            <Identity Name="$appName" Publisher="$publisher" Version="${version}.0" ProcessorArchitecture="x64"/>
+            <Properties>
+              <DisplayName>GenImage Studio</DisplayName>
+              <PublisherDisplayName>Jneaimi</PublisherDisplayName>
+              <Logo>Assets\StoreLogo.png</Logo>
+            </Properties>
+            <Dependencies>
+              <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.22621.0"/>
+            </Dependencies>
+            <Resources>
+              <Resource Language="en-us"/>
+            </Resources>
+            <Applications>
+              <Application Id="App" Executable="GenImage Studio.exe" EntryPoint="Windows.FullTrustApplication">
+                <uap:VisualElements DisplayName="GenImage Studio"
+                                    Description="AI-powered image generation studio"
+                                    BackgroundColor="transparent"
+                                    Square150x150Logo="Assets\Square150x150Logo.png"
+                                    Square44x44Logo="Assets\Square44x44Logo.png">
+                  <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
+                </uap:VisualElements>
+              </Application>
+            </Applications>
+            <Capabilities>
+              <rescap:Capability Name="runFullTrust"/>
+            </Capabilities>
+          </Package>
+          "@
+
+          # Create package structure
+          $packageDir = "$msixDir/package"
+          New-Item -ItemType Directory -Force -Path "$packageDir/Assets"
+
+          # Copy executable and resources
+          Copy-Item "offers-studio/src-tauri/target/release/GenImage Studio.exe" "$packageDir/"
+          Copy-Item "offers-studio/src-tauri/target/release/*.dll" "$packageDir/" -ErrorAction SilentlyContinue
+
+          # Create placeholder icons (44x44, 150x150, 310x150, StoreLogo)
+          $iconSrc = "offers-studio/src-tauri/icons/icon.ico"
+
+          # Use magick if available, otherwise copy ico
+          if (Get-Command magick -ErrorAction SilentlyContinue) {
+            magick "$iconSrc" -resize 44x44 "$packageDir/Assets/Square44x44Logo.png"
+            magick "$iconSrc" -resize 150x150 "$packageDir/Assets/Square150x150Logo.png"
+            magick "$iconSrc" -resize 310x150 "$packageDir/Assets/Wide310x150Logo.png"
+            magick "$iconSrc" -resize 50x50 "$packageDir/Assets/StoreLogo.png"
+          } else {
+            # Create simple colored PNGs as placeholders using PowerShell
+            Add-Type -AssemblyName System.Drawing
+            foreach ($size in @(@(44,44,"Square44x44Logo"), @(150,150,"Square150x150Logo"), @(310,150,"Wide310x150Logo"), @(50,50,"StoreLogo"))) {
+              $bmp = New-Object System.Drawing.Bitmap($size[0], $size[1])
+              $g = [System.Drawing.Graphics]::FromImage($bmp)
+              $g.Clear([System.Drawing.Color]::FromArgb(45, 45, 45))
+              $g.Dispose()
+              $bmp.Save("$packageDir/Assets/$($size[2]).png", [System.Drawing.Imaging.ImageFormat]::Png)
+              $bmp.Dispose()
+            }
+          }
+
+          # Write manifest
+          $manifest | Out-File -FilePath "$packageDir/AppxManifest.xml" -Encoding UTF8
+
+          # Create MSIX using makeappx from Windows SDK
+          $sdkPath = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\makeappx.exe" | Sort-Object -Descending | Select-Object -First 1
+          if ($sdkPath) {
+            & $sdkPath pack /d "$packageDir" /p "$msixDir/GenImage.Studio_${version}_x64.msix" /o
+          } else {
+            Write-Error "makeappx.exe not found"
+            exit 1
+          }
+
       - name: Upload Windows MSI
         uses: actions/upload-artifact@v4
         with:
@@ -95,6 +184,13 @@ jobs:
           name: windows-exe
           path: offers-studio/src-tauri/target/release/bundle/nsis/*.exe
           if-no-files-found: error
+
+      - name: Upload Windows MSIX
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-msix
+          path: offers-studio/src-tauri/target/release/bundle/msix/*.msix
+          if-no-files-found: warn
 
   build-linux:
     runs-on: ubuntu-22.04
@@ -161,6 +257,7 @@ jobs:
             artifacts/macos-universal/*.dmg
             artifacts/windows-msi/*.msi
             artifacts/windows-exe/*.exe
+            artifacts/windows-msix/*.msix
             artifacts/linux/*.deb
             artifacts/linux/*.AppImage
           draft: true
