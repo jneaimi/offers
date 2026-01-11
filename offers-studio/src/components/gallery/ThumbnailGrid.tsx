@@ -5,13 +5,14 @@ import { ImageCard } from './ImageCard';
 interface ThumbnailGridProps {
   images: ImageFile[];
   onSelectImage: (image: ImageFile) => void;
+  onAddToReferences?: (path: string) => void;
 }
 
 /**
  * ThumbnailGrid - Scrollable grid of image thumbnails
  * Uses KB-UI-001 scroll containment pattern
  */
-export function ThumbnailGrid({ images, onSelectImage }: ThumbnailGridProps) {
+export function ThumbnailGrid({ images, onSelectImage, onAddToReferences }: ThumbnailGridProps) {
   // Skip the first image as it's shown in LatestPreview
   const gridImages = images.slice(1);
 
@@ -34,6 +35,7 @@ export function ThumbnailGrid({ images, onSelectImage }: ThumbnailGridProps) {
                 key={image.path}
                 image={image}
                 onClick={() => onSelectImage(image)}
+                onAddToReferences={onAddToReferences}
               />
             ))}
           </div>

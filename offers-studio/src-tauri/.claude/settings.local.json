@@ -1,0 +1,13 @@
+{
+  "disabledMcpjsonServers": [
+    "linear-server",
+    "github",
+    "vercel",
+    "sequential-thinking",
+    "playwright",
+    "Context7",
+    "supabase",
+    "claude-context",
+    "browser-tools"
+  ]
+}

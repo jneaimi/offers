@@ -29,11 +29,12 @@ A native desktop application that wraps Claude Code with project-specific visual
 |-------|--------|-------------|
 | **Phase 1: Core Shell** | ✅ Complete | Terminal + PTY + Claude Code integration |
 | **Phase 2: Gallery** | ✅ Complete | File watcher + image gallery panel |
-| **Phase 3: References** | 🔲 Not Started | Drag-and-drop reference images |
-| **Phase 4: Polish** | 🔲 Not Started | Keyboard shortcuts, settings, themes |
-| **Phase 5: Distribution** | 🔲 Not Started | Code signing, packaging, auto-update |
+| **Phase 3: References** | ✅ Complete | Reference images with click-to-add + Send to Claude |
+| **Phase 4: Context & Sessions** | ✅ Complete | Context usage bar + session management |
+| **Phase 5: Polish** | 🔲 Not Started | Keyboard shortcuts, settings, themes |
+| **Phase 6: Distribution** | 🔲 Not Started | Code signing, packaging, auto-update |
 
-**Last Updated**: 2026-01-10
+**Last Updated**: 2026-01-10 (Phase 4: Context & Session Management complete)
 
 ### How to Run (MVP)
 
@@ -137,7 +138,7 @@ The main interface is a **full Claude Code terminal** that provides:
 | All commands | `/genimg`, `/review`, `/commit`, `/kb`, etc. |
 | All skills | Nano Banana Pro prompt engineering, all project skills |
 | Full context | CLAUDE.md, project files, conversation history |
-| Keyboard shortcuts | All Claude Code shortcuts work |
+| Keyboard shortcuts | All Claude Code shortcuts work (including Shift+Enter for multiline) |
 | MCP tools | Browser automation, Greptile, IDE integration |
 
 ### Secondary Feature: Image Gallery Panel
@@ -160,23 +161,58 @@ A key capability for image generation is using **reference images** to guide the
 
 | Feature | Description |
 |---------|-------------|
-| Drag from gallery | Drag any thumbnail directly into the terminal as reference |
-| Drag from desktop | Drop external images into a reference zone |
-| Reference picker | Button to open file dialog for selecting references |
-| Reference preview | Shows selected reference images before generation |
+| Add from gallery | Click "+" button on thumbnails or "+ Reference" on latest preview |
+| Add from desktop | Drop external images onto app window (visual drop zone) |
+| Reference picker | "Add" button opens native file dialog for selecting references |
+| Reference preview | Shows selected reference images as thumbnails in Reference Bar |
+| Send to Claude | Green "Send to Claude" button injects references into terminal |
 | Multi-reference | Support up to 14 reference images per generation |
-| Clear references | Quick button to clear all selected references |
+| Clear references | "Clear" button removes all selected references |
+| Remove individual | Click "×" on any reference thumbnail to remove it |
+
+### Context & Session Management Features
+
+Real-time context tracking and session management capabilities:
+
+| Feature | Description |
+|---------|-------------|
+| **Context Usage Bar** | Visual progress bar showing token consumption (e.g., 134K / 200K = 67%) |
+| **Token Breakdown** | Expandable view showing input/output/cache token distribution |
+| **Clear Session** | Button to send `/clear` command - clears conversation, keeps project context |
+| **Compact Session** | Button to send `/compact` command - summarizes conversation to reduce tokens |
+| **Session List** | Browse previous sessions with timestamps and preview of first message |
+| **Resume Session** | Click to resume any previous session (spawns new Claude with `--resume`) |
+| **Session Naming** | Add custom names/tags to sessions for easy identification |
+| **Current Session ID** | Display current session UUID for reference |
+
+**Data Sources (Hybrid Approach):**
+
+| Data | Source | Method |
+|------|--------|--------|
+| Real-time context usage | Claude Code Statusline | Custom statusline writes JSON to temp file |
+| Session actions | PTY stdin | Send `/clear`, `/compact` commands directly |
+| Session history | File system | Read `~/.claude/projects/[path]/` JSONL files |
 
 ### Tertiary Features
 
 | Feature | Description |
 |---------|-------------|
-| Status bar | Project name, API status, model, image count |
+| Status bar | Project name, API status, model, image count, **context %** |
 | Image modal | Full-screen image preview with metadata |
 | Settings | Theme, panel sizes, gallery preferences |
 | Keyboard shortcuts | Toggle panels, focus terminal, etc. |
 | Error boundaries | Graceful handling of terminal/component crashes |
 | Loading states | Skeleton loaders for gallery and large directories |
+
+### Keyboard Shortcuts
+
+| Shortcut | Action | Notes |
+|----------|--------|-------|
+| **Shift+Enter** | Insert newline (multiline input) | Custom handler sends kitty keyboard protocol sequence |
+| **Enter** | Submit message | Standard terminal behavior |
+| **Escape** | Close modal | When image modal is open |
+
+> **Implementation Note**: xterm.js doesn't differentiate between Enter and Shift+Enter by default (both send `\r`). We use `attachCustomKeyEventHandler` to intercept Shift+Enter and send the kitty keyboard protocol sequence (`\x1b[13;2u`) which Claude Code recognizes for multiline input.
 
 ---
 
@@ -358,6 +394,18 @@ offers-studio/
 │   │   │   ├── DropZone.tsx          # Drop zone for external images
 │   │   │   └── useReferences.ts      # Reference images state hook
 │   │   │
+│   │   ├── context/
+│   │   │   ├── ContextBar.tsx        # Context usage progress bar
+│   │   │   ├── ContextBreakdown.tsx  # Expandable token breakdown details
+│   │   │   ├── SessionActions.tsx    # Clear/Compact action buttons
+│   │   │   └── useContextUsage.ts    # Hook for statusline data
+│   │   │
+│   │   ├── sessions/
+│   │   │   ├── SessionManager.tsx    # Session list panel/drawer
+│   │   │   ├── SessionCard.tsx       # Single session item with preview
+│   │   │   ├── SessionNameDialog.tsx # Dialog to name/rename sessions
+│   │   │   └── useSessionList.ts     # Hook for reading session files
+│   │   │
 │   │   └── ui/                       # shadcn/ui components
 │   │       ├── button.tsx
 │   │       ├── card.tsx
@@ -370,12 +418,16 @@ offers-studio/
 │   │   ├── useFileWatcher.ts         # File system event listener
 │   │   ├── useGallery.ts             # Gallery state and operations
 │   │   ├── useImageMetadata.ts       # Parse JSON metadata files
-│   │   └── useSettings.ts            # App settings management
+│   │   ├── useSettings.ts            # App settings management
+│   │   ├── useContextUsage.ts        # Real-time context/token tracking
+│   │   └── useSessionList.ts         # Session history from file system
 │   │
 │   ├── stores/
 │   │   ├── appStore.ts               # Global app state (Zustand)
 │   │   ├── galleryStore.ts           # Gallery images state
 │   │   ├── referenceStore.ts         # Reference images state (max 14)
+│   │   ├── contextStore.ts           # Context usage state (tokens, %)
+│   │   ├── sessionStore.ts           # Session list and current session
 │   │   └── settingsStore.ts          # User preferences
 │   │
 │   ├── lib/
@@ -395,8 +447,10 @@ offers-studio/
 │   │   ├── main.rs                   # Tauri entry point
 │   │   ├── lib.rs                    # Library exports
 │   │   ├── pty.rs                    # PTY process management
-│   │   ├── watcher.rs                # File system watcher
+│   │   ├── watcher.rs                # File system watcher (images + statusline)
 │   │   ├── commands.rs               # Tauri commands
+│   │   ├── sessions.rs               # Session file parsing and management
+│   │   ├── context.rs                # Statusline JSON parsing
 │   │   └── state.rs                  # App state management
 │   │
 │   ├── capabilities/
@@ -509,6 +563,100 @@ offers-studio/
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
+### Interface with Context & Session Management (Phase 4)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Offers Studio                                               [─] [□] [×]   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌───────────────────────────────────────────────────────┐  ┌────────────┐ │
+│  │ Claude Code                    [Clear] [Compact] [⚙] │  │  Preview   │ │
+│  ├───────────────────────────────────────────────────────┤  ├────────────┤ │
+│  │                                                       │  │            │ │
+│  │  claude > Ready to help with your project.            │  │  ┌──────┐  │ │
+│  │                                                       │  │  │      │  │ │
+│  │  You have access to:                                  │  │  │ IMG  │  │ │
+│  │  • Nano Banana Pro skill for image generation         │  │  │      │  │ │
+│  │  • /genimg command for quick generation               │  │  └──────┘  │ │
+│  │  • generate-image.py for advanced options             │  │  Latest    │ │
+│  │                                                       │  │  image     │ │
+│  │  What would you like to create today?                 │  ├────────────┤ │
+│  │                                                       │  │  Gallery   │ │
+│  │  >                                                    │  │  ┌──┐ ┌──┐ │ │
+│  │                                                       │  │  │  │ │  │ │ │
+│  └───────────────────────────────────────────────────────┘  │  └──┘ └──┘ │ │
+│                                                             │            │ │
+│  ┌───────────────────────────────────────────────────────┐  │ [Sessions] │ │
+│  │  References: [img1.png ×] [img2.png ×]  [+] [Clear]   │  └────────────┘ │
+│  └───────────────────────────────────────────────────────┘                 │
+│                                                                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │  Context: ████████████░░░░░░░░ 67%  │  134K / 200K tokens  [▼]     │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  Session: da63ab28 "Marketing slides" │ Model: opus │ Images: 14          │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Session Manager Panel (Expanded)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Sessions                                                        [×]       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │  ★ Current Session                                                  │   │
+│  │  da63ab28 • "Marketing slides" • 45 messages                        │   │
+│  │  Started: Today 2:30 PM                                    [Rename] │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  Previous Sessions                                                          │
+│  ─────────────────────────────────────────────────────────────────────────  │
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │  bc4512ef • "CEO headshots" • 23 messages              [Resume]     │   │
+│  │  Yesterday 4:15 PM                                                  │   │
+│  │  "Generate professional headshots for the executive team..."        │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │  f8a91c23 • 67 messages                                [Resume]     │   │
+│  │  Jan 8, 2026 10:22 AM                                               │   │
+│  │  "Help me create a presentation about AI strategy..."               │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │  2d7bc456 • "Initial brainstorm" • 12 messages         [Resume]     │   │
+│  │  Jan 7, 2026 9:00 AM                                                │   │
+│  │  "What are the key topics for UAE executive AI training?"           │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Context Breakdown (Expanded)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Context Usage                                            [▲]   │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ████████████░░░░░░░░  67%  (134,000 / 200,000 tokens)         │
+│                                                                 │
+│  Breakdown:                                                     │
+│  ├─ Input tokens:        12,000   (9%)                         │
+│  ├─ Output tokens:        3,000   (2%)                         │
+│  ├─ Cache read:         114,000  (85%)                         │
+│  └─ Cache creation:       5,000   (4%)                         │
+│                                                                 │
+│  Tip: Use [Compact] to summarize and free up context space     │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
 ### Typical Workflow
 
 **Step 1: User starts a conversation**
@@ -570,27 +718,34 @@ The side panel immediately shows the new image. User can:
 
 ### Reference Images Workflow
 
-**Method 1: Drag from Gallery**
+**Method 1: Add from Gallery (Click)**
 
-1. User sees a generated image they want to use as reference
-2. Drag the thumbnail from the gallery panel
-3. Drop it into the Reference Bar at the bottom
-4. The reference appears as a thumbnail with an × to remove
+1. **Latest Preview**: Click the green **"+ Reference"** button next to "View Full"
+2. **Thumbnail Grid**: Hover over any image and click the blue **"+"** button (top-right corner)
+3. The reference appears as a thumbnail in the Reference Bar with an × to remove
 
-**Method 2: Add External Images**
+**Method 2: Add External Images (File Picker)**
 
-1. Click the **[+ Add]** button in the Reference Bar
+1. Click the **"Add"** button in the Reference Bar
 2. Native file dialog opens (supports .jpg, .png, .webp)
 3. Select one or multiple images
-4. Images are copied to a temp folder and added to references
+4. Images are added to the Reference Bar
 
-**Method 3: Drag from Desktop**
+**Method 3: Drop from Desktop**
 
 1. Drag image files from Finder/Explorer
-2. Drop onto the application window (drop zone highlights)
+2. Drop onto the application window (blue overlay appears: "Drop images here")
 3. Images are added to the Reference Bar
 
-**Using References in Generation**
+**Sending References to Claude**
+
+Once you have references selected, click the green **"Send to Claude"** button:
+
+```
+Use these reference images for the next image generation: --reference /path/to/img1.png /path/to/img2.png
+```
+
+Then type your prompt:
 
 ```
 > Create a new slide that matches the style of my reference images.
@@ -598,11 +753,10 @@ The side panel immediately shows the new image. User can:
   "AI ROI Calculator"
 ```
 
-Claude automatically detects references in the Reference Bar and includes them:
+Claude will use the references in the generation:
 
 ```
-Claude: I see you have 2 reference images selected. I'll use those
-to match the style for your new slide.
+Claude: I'll create a slide matching the style of your reference images.
 
 Generating with gemini-3-pro-image-preview...
 Prompt: Professional 16:9 presentation slide...
@@ -614,10 +768,11 @@ Aspect ratio: 16:9, Size: 4K
 
 **Reference Limits**
 
-- Maximum 14 reference images at once
+- Maximum 14 reference images at once (Gemini API limit)
 - Reference Bar shows count: `(2/14)`
-- Warning appears when limit reached
-- Clear All button removes all references
+- "Add" button disabled when limit reached
+- "Clear" button removes all references
+- Click × on individual thumbnails to remove one at a time
 
 ---
 
@@ -1422,7 +1577,698 @@ export function ImageCard({ image, onSelect }: ImageCardProps) {
 }
 ```
 
-### 6. Tauri Configuration
+### 6. Context & Session Management (Phase 4)
+
+#### 6.1 Context Usage Store
+
+```typescript
+// src/stores/contextStore.ts
+import { create } from 'zustand';
+
+interface ContextUsage {
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  contextWindowSize: number;
+  currentUsage: {
+    inputTokens: number;
+    outputTokens: number;
+    cacheCreationInputTokens: number;
+    cacheReadInputTokens: number;
+  };
+}
+
+interface ContextStore {
+  usage: ContextUsage | null;
+  percentage: number;
+  isLoading: boolean;
+  error: string | null;
+  setUsage: (usage: ContextUsage) => void;
+  reset: () => void;
+}
+
+const calculatePercentage = (usage: ContextUsage): number => {
+  const totalUsed = usage.totalInputTokens + usage.totalOutputTokens;
+  return Math.round((totalUsed / usage.contextWindowSize) * 100);
+};
+
+export const useContextStore = create<ContextStore>((set) => ({
+  usage: null,
+  percentage: 0,
+  isLoading: true,
+  error: null,
+
+  setUsage: (usage: ContextUsage) => {
+    set({
+      usage,
+      percentage: calculatePercentage(usage),
+      isLoading: false,
+      error: null,
+    });
+  },
+
+  reset: () => {
+    set({
+      usage: null,
+      percentage: 0,
+      isLoading: true,
+      error: null,
+    });
+  },
+}));
+```
+
+#### 6.2 Context Usage Hook
+
+```typescript
+// src/hooks/useContextUsage.ts
+import { useEffect } from 'react';
+import { listen } from '@tauri-apps/api/event';
+import { useContextStore } from '@/stores/contextStore';
+
+interface StatuslineData {
+  context_window: {
+    total_input_tokens: number;
+    total_output_tokens: number;
+    context_window_size: number;
+    current_usage: {
+      input_tokens: number;
+      output_tokens: number;
+      cache_creation_input_tokens: number;
+      cache_read_input_tokens: number;
+    };
+  };
+}
+
+export function useContextUsage() {
+  const { usage, percentage, isLoading, setUsage, reset } = useContextStore();
+
+  useEffect(() => {
+    // Listen for context updates from Rust backend
+    const unlisten = listen<StatuslineData>('context-updated', (event) => {
+      const data = event.payload.context_window;
+      setUsage({
+        totalInputTokens: data.total_input_tokens,
+        totalOutputTokens: data.total_output_tokens,
+        contextWindowSize: data.context_window_size,
+        currentUsage: {
+          inputTokens: data.current_usage.input_tokens,
+          outputTokens: data.current_usage.output_tokens,
+          cacheCreationInputTokens: data.current_usage.cache_creation_input_tokens,
+          cacheReadInputTokens: data.current_usage.cache_read_input_tokens,
+        },
+      });
+    });
+
+    return () => {
+      unlisten.then(fn => fn());
+    };
+  }, [setUsage]);
+
+  return { usage, percentage, isLoading, reset };
+}
+```
+
+#### 6.3 Context Bar Component
+
+```tsx
+// src/components/context/ContextBar.tsx
+import { useContextUsage } from '@/hooks/useContextUsage';
+import { ContextBreakdown } from './ContextBreakdown';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
+
+function formatTokens(tokens: number): string {
+  if (tokens >= 1000000) {
+    return `${(tokens / 1000000).toFixed(1)}M`;
+  }
+  if (tokens >= 1000) {
+    return `${(tokens / 1000).toFixed(0)}K`;
+  }
+  return tokens.toString();
+}
+
+export function ContextBar() {
+  const { usage, percentage, isLoading } = useContextUsage();
+  const [expanded, setExpanded] = useState(false);
+
+  if (isLoading || !usage) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-900 border-t border-gray-800">
+        <span className="text-xs text-gray-500">Context: Loading...</span>
+      </div>
+    );
+  }
+
+  const totalUsed = usage.totalInputTokens + usage.totalOutputTokens;
+
+  // Color based on usage
+  const barColor = percentage < 50
+    ? 'bg-green-500'
+    : percentage < 80
+      ? 'bg-yellow-500'
+      : 'bg-red-500';
+
+  return (
+    <div className="bg-gray-900 border-t border-gray-800">
+      <div
+        className="flex items-center gap-3 px-3 py-1.5 cursor-pointer hover:bg-gray-800/50"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <span className="text-xs text-gray-400 shrink-0">Context:</span>
+
+        {/* Progress bar */}
+        <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden max-w-xs">
+          <div
+            className={cn('h-full transition-all duration-300', barColor)}
+            style={{ width: `${Math.min(percentage, 100)}%` }}
+          />
+        </div>
+
+        {/* Percentage and token count */}
+        <span className={cn(
+          'text-xs font-mono',
+          percentage >= 80 ? 'text-red-400' : 'text-gray-300'
+        )}>
+          {percentage}%
+        </span>
+        <span className="text-xs text-gray-500">
+          {formatTokens(totalUsed)} / {formatTokens(usage.contextWindowSize)}
+        </span>
+
+        {/* Expand/collapse button */}
+        <button className="text-gray-400 hover:text-gray-200">
+          {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+        </button>
+      </div>
+
+      {/* Expanded breakdown */}
+      {expanded && <ContextBreakdown usage={usage} />}
+    </div>
+  );
+}
+```
+
+#### 6.4 Session Actions Component
+
+```tsx
+// src/components/context/SessionActions.tsx
+import { invoke } from '@tauri-apps/api/core';
+import { Button } from '@/components/ui/button';
+import { Trash2, Minimize2 } from 'lucide-react';
+import { useState } from 'react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+
+interface SessionActionsProps {
+  ptyId: string;
+}
+
+export function SessionActions({ ptyId }: SessionActionsProps) {
+  const [isExecuting, setIsExecuting] = useState(false);
+
+  const sendCommand = async (command: string) => {
+    setIsExecuting(true);
+    try {
+      // Send command to PTY stdin
+      await invoke('write_pty', { id: ptyId, data: `${command}\n` });
+    } catch (error) {
+      console.error(`Failed to send ${command}:`, error);
+    } finally {
+      // Brief delay to show feedback
+      setTimeout(() => setIsExecuting(false), 500);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-1">
+      {/* Clear Session */}
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={isExecuting}
+            title="Clear conversation"
+            className="h-7 px-2"
+          >
+            <Trash2 className="w-3.5 h-3.5 mr-1" />
+            Clear
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear Session?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will clear the conversation history. Project context
+              (CLAUDE.md) and memory will be preserved.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => sendCommand('/clear')}>
+              Clear
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Compact Session */}
+      <Button
+        variant="ghost"
+        size="sm"
+        disabled={isExecuting}
+        onClick={() => sendCommand('/compact')}
+        title="Compact conversation to save tokens"
+        className="h-7 px-2"
+      >
+        <Minimize2 className="w-3.5 h-3.5 mr-1" />
+        Compact
+      </Button>
+    </div>
+  );
+}
+```
+
+#### 6.5 Session Store
+
+```typescript
+// src/stores/sessionStore.ts
+import { create } from 'zustand';
+
+interface SessionInfo {
+  id: string;
+  projectPath: string;
+  timestamp: Date;
+  firstMessage: string;
+  messageCount: number;
+  customName?: string;
+}
+
+interface SessionStore {
+  sessions: SessionInfo[];
+  currentSessionId: string | null;
+  isLoading: boolean;
+  error: string | null;
+
+  setSessions: (sessions: SessionInfo[]) => void;
+  setCurrentSession: (id: string) => void;
+  renameSession: (id: string, name: string) => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+}
+
+export const useSessionStore = create<SessionStore>((set, get) => ({
+  sessions: [],
+  currentSessionId: null,
+  isLoading: true,
+  error: null,
+
+  setSessions: (sessions) => {
+    set({ sessions, isLoading: false });
+  },
+
+  setCurrentSession: (id) => {
+    set({ currentSessionId: id });
+  },
+
+  renameSession: (id, name) => {
+    set(state => ({
+      sessions: state.sessions.map(s =>
+        s.id === id ? { ...s, customName: name } : s
+      ),
+    }));
+  },
+
+  setLoading: (loading) => {
+    set({ isLoading: loading });
+  },
+
+  setError: (error) => {
+    set({ error, isLoading: false });
+  },
+}));
+```
+
+#### 6.6 Session List Hook
+
+```typescript
+// src/hooks/useSessionList.ts
+import { useEffect, useCallback } from 'react';
+import { invoke } from '@tauri-apps/api/core';
+import { useSessionStore } from '@/stores/sessionStore';
+
+interface RawSessionInfo {
+  id: string;
+  project_path: string;
+  timestamp: string;
+  first_message: string;
+  message_count: number;
+}
+
+export function useSessionList(projectPath: string) {
+  const {
+    sessions,
+    currentSessionId,
+    isLoading,
+    error,
+    setSessions,
+    setCurrentSession,
+    renameSession,
+    setLoading,
+    setError,
+  } = useSessionStore();
+
+  // Load sessions from file system
+  const loadSessions = useCallback(async () => {
+    setLoading(true);
+    try {
+      const rawSessions = await invoke<RawSessionInfo[]>('list_sessions', {
+        projectPath,
+      });
+
+      // Load custom names from local storage
+      const customNames = JSON.parse(
+        localStorage.getItem('session-names') || '{}'
+      );
+
+      const sessions = rawSessions.map(s => ({
+        id: s.id,
+        projectPath: s.project_path,
+        timestamp: new Date(s.timestamp),
+        firstMessage: s.first_message,
+        messageCount: s.message_count,
+        customName: customNames[s.id],
+      }));
+
+      // Sort by timestamp (newest first)
+      sessions.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+
+      setSessions(sessions);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load sessions');
+    }
+  }, [projectPath, setSessions, setLoading, setError]);
+
+  // Save custom name
+  const saveSessionName = useCallback((id: string, name: string) => {
+    const customNames = JSON.parse(
+      localStorage.getItem('session-names') || '{}'
+    );
+    customNames[id] = name;
+    localStorage.setItem('session-names', JSON.stringify(customNames));
+    renameSession(id, name);
+  }, [renameSession]);
+
+  // Resume a session (spawns new Claude instance)
+  const resumeSession = useCallback(async (sessionId: string) => {
+    try {
+      // This will be handled by spawning a new PTY with --resume flag
+      await invoke('resume_session', { sessionId, projectPath });
+      setCurrentSession(sessionId);
+    } catch (err) {
+      console.error('Failed to resume session:', err);
+    }
+  }, [projectPath, setCurrentSession]);
+
+  // Load sessions on mount
+  useEffect(() => {
+    loadSessions();
+  }, [loadSessions]);
+
+  return {
+    sessions,
+    currentSessionId,
+    isLoading,
+    error,
+    refresh: loadSessions,
+    saveSessionName,
+    resumeSession,
+  };
+}
+```
+
+#### 6.7 Rust: Session Parser
+
+```rust
+// src-tauri/src/sessions.rs
+use serde::{Deserialize, Serialize};
+use std::fs::{self, File};
+use std::io::{BufRead, BufReader};
+use std::path::{Path, PathBuf};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SessionInfo {
+    pub id: String,
+    pub project_path: String,
+    pub timestamp: String,
+    pub first_message: String,
+    pub message_count: usize,
+}
+
+#[derive(Debug, Deserialize)]
+struct SessionMessage {
+    #[serde(rename = "type")]
+    msg_type: Option<String>,
+    timestamp: Option<String>,
+    message: Option<MessageContent>,
+}
+
+#[derive(Debug, Deserialize)]
+struct MessageContent {
+    role: Option<String>,
+    content: Option<String>,
+}
+
+/// Get the Claude projects directory
+fn get_claude_projects_dir() -> Option<PathBuf> {
+    dirs::home_dir().map(|h| h.join(".claude").join("projects"))
+}
+
+/// Encode project path to match Claude's directory naming
+fn encode_project_path(project_path: &str) -> String {
+    // Claude encodes paths - simplified version
+    project_path
+        .replace("/", "-")
+        .replace("\\", "-")
+        .trim_start_matches('-')
+        .to_string()
+}
+
+/// List all sessions for a project
+#[tauri::command]
+pub fn list_sessions(project_path: &str) -> Result<Vec<SessionInfo>, String> {
+    let projects_dir = get_claude_projects_dir()
+        .ok_or_else(|| "Could not find Claude projects directory".to_string())?;
+
+    let encoded_path = encode_project_path(project_path);
+    let project_sessions_dir = projects_dir.join(&encoded_path);
+
+    if !project_sessions_dir.exists() {
+        return Ok(vec![]);
+    }
+
+    let mut sessions = Vec::new();
+
+    // Read all .jsonl files in the directory
+    let entries = fs::read_dir(&project_sessions_dir)
+        .map_err(|e| format!("Failed to read sessions directory: {}", e))?;
+
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.extension().map_or(false, |ext| ext == "jsonl") {
+            if let Some(session) = parse_session_file(&path, &encoded_path) {
+                sessions.push(session);
+            }
+        }
+    }
+
+    // Sort by timestamp (newest first)
+    sessions.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
+
+    Ok(sessions)
+}
+
+/// Parse a single session file to extract metadata
+fn parse_session_file(path: &Path, project_path: &str) -> Option<SessionInfo> {
+    let file = File::open(path).ok()?;
+    let reader = BufReader::new(file);
+
+    let session_id = path
+        .file_stem()?
+        .to_string_lossy()
+        .to_string();
+
+    let mut first_message = String::new();
+    let mut first_timestamp = String::new();
+    let mut message_count = 0;
+
+    for line in reader.lines().flatten() {
+        if let Ok(msg) = serde_json::from_str::<SessionMessage>(&line) {
+            // Count user/assistant messages
+            if let Some(ref msg_type) = msg.msg_type {
+                if msg_type == "user" || msg_type == "assistant" {
+                    message_count += 1;
+
+                    // Capture first user message as preview
+                    if first_message.is_empty() && msg_type == "user" {
+                        if let Some(ref content) = msg.message {
+                            if let Some(ref text) = content.content {
+                                first_message = text
+                                    .chars()
+                                    .take(100)
+                                    .collect::<String>();
+                                if text.len() > 100 {
+                                    first_message.push_str("...");
+                                }
+                            }
+                        }
+                    }
+
+                    // Capture first timestamp
+                    if first_timestamp.is_empty() {
+                        if let Some(ts) = msg.timestamp {
+                            first_timestamp = ts;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Skip empty or summary-only files
+    if message_count == 0 {
+        return None;
+    }
+
+    Some(SessionInfo {
+        id: session_id,
+        project_path: project_path.to_string(),
+        timestamp: first_timestamp,
+        first_message,
+        message_count,
+    })
+}
+```
+
+#### 6.8 Rust: Context Watcher
+
+```rust
+// src-tauri/src/context.rs
+use notify::{Watcher, RecursiveMode, Result, Event, EventKind};
+use serde::{Deserialize, Serialize};
+use std::fs;
+use std::path::Path;
+use std::sync::Arc;
+use parking_lot::Mutex;
+use tauri::{AppHandle, Emitter};
+
+const STATUSLINE_FILE: &str = "/tmp/offers-studio-context.json";
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContextWindow {
+    pub total_input_tokens: u64,
+    pub total_output_tokens: u64,
+    pub context_window_size: u64,
+    pub current_usage: CurrentUsage,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CurrentUsage {
+    pub input_tokens: u64,
+    pub output_tokens: u64,
+    pub cache_creation_input_tokens: u64,
+    pub cache_read_input_tokens: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StatuslineData {
+    pub context_window: ContextWindow,
+}
+
+/// Context watcher state
+pub struct ContextWatcherState {
+    watcher: Arc<Mutex<Option<notify::RecommendedWatcher>>>,
+}
+
+impl ContextWatcherState {
+    pub fn new() -> Self {
+        Self {
+            watcher: Arc::new(Mutex::new(None)),
+        }
+    }
+
+    /// Start watching the statusline JSON file
+    pub fn start(&self, app: &AppHandle) -> Result<()> {
+        let statusline_path = Path::new(STATUSLINE_FILE);
+        let app_handle = app.clone();
+
+        // Create watcher
+        let mut watcher = notify::recommended_watcher(move |res: Result<Event>| {
+            if let Ok(event) = res {
+                if matches!(event.kind, EventKind::Modify(_) | EventKind::Create(_)) {
+                    // Read and parse the statusline file
+                    if let Ok(content) = fs::read_to_string(STATUSLINE_FILE) {
+                        if let Ok(data) = serde_json::from_str::<StatuslineData>(&content) {
+                            let _ = app_handle.emit("context-updated", &data);
+                        }
+                    }
+                }
+            }
+        })?;
+
+        // Watch the parent directory (file may not exist yet)
+        let parent = statusline_path.parent().unwrap_or(Path::new("/tmp"));
+        watcher.watch(parent, RecursiveMode::NonRecursive)?;
+
+        // Store watcher
+        let mut guard = self.watcher.lock();
+        *guard = Some(watcher);
+
+        Ok(())
+    }
+
+    pub fn stop(&self) {
+        let mut guard = self.watcher.lock();
+        *guard = None;
+    }
+}
+```
+
+#### 6.9 Statusline Setup Script
+
+Create this script and configure Claude Code to use it:
+
+```bash
+#!/bin/bash
+# ~/.claude/statusline-offers-studio.sh
+#
+# This script receives JSON context data from Claude Code on stdin
+# and writes it to a temp file that Offers Studio watches.
+#
+# To enable: Add to Claude settings:
+#   "statusline": "~/.claude/statusline-offers-studio.sh"
+
+# Read stdin and write to temp file (atomic write via temp + rename)
+TEMP_FILE="/tmp/offers-studio-context.json.tmp"
+FINAL_FILE="/tmp/offers-studio-context.json"
+
+cat > "$TEMP_FILE"
+mv "$TEMP_FILE" "$FINAL_FILE"
+```
+
+Make executable: `chmod +x ~/.claude/statusline-offers-studio.sh`
+
+### 7. Tauri Configuration
 
 ```json
 // src-tauri/tauri.conf.json
@@ -1492,7 +2338,8 @@ export function ImageCard({ image, onSelect }: ImageCardProps) {
       "allow": [
         { "path": "$RESOURCE/**" },
         { "path": "$APPDATA/**" },
-        { "path": "/Users/jneaimimacmini/dev/apps/offers/**" }
+        { "path": "/Users/jneaimimacmini/dev/apps/offers/**" },
+        { "path": "$HOME/.claude/**" }
       ]
     },
     {
@@ -1500,7 +2347,9 @@ export function ImageCard({ image, onSelect }: ImageCardProps) {
       "allow": [
         { "path": "$RESOURCE/**" },
         { "path": "$APPDATA/**" },
-        { "path": "/Users/jneaimimacmini/dev/apps/offers/**" }
+        { "path": "/Users/jneaimimacmini/dev/apps/offers/**" },
+        { "path": "$HOME/.claude/**" },
+        { "path": "/tmp/offers-studio-context.json" }
       ]
     },
     {
@@ -1508,7 +2357,8 @@ export function ImageCard({ image, onSelect }: ImageCardProps) {
       "allow": [
         { "path": "$RESOURCE/**" },
         { "path": "$APPDATA/**" },
-        { "path": "/Users/jneaimimacmini/dev/apps/offers/**" }
+        { "path": "/Users/jneaimimacmini/dev/apps/offers/**" },
+        { "path": "$HOME/.claude/**" }
       ]
     },
     "shell:allow-open"
@@ -1517,6 +2367,8 @@ export function ImageCard({ image, onSelect }: ImageCardProps) {
 ```
 
 > **Note**: PTY functionality is implemented with the `portable-pty` Rust crate, not a Tauri plugin, so no PTY permission is needed. The PTY commands (`spawn_pty`, `write_pty`, etc.) are custom Tauri commands. The fs permissions use scoped access to restrict file system operations to specific directories.
+>
+> **Phase 4 additions**: `$HOME/.claude/**` is required for reading session history files, and `/tmp/offers-studio-context.json` is required for the statusline context watcher.
 
 ---
 
@@ -1684,17 +2536,157 @@ Use a tool like `tauri icon` or [makeappicon.com](https://makeappicon.com) to ge
 - [x] Asset protocol configuration for displaying local images
 - [x] Integrate app icon (all sizes generated in `src-tauri/icons/`)
 
-### Phase 3: Reference Images
+### Phase 3: Reference Images ✅
 
-- [ ] Reference images store (Zustand)
-- [ ] Reference bar component with thumbnails
-- [ ] Drag from gallery to reference bar
-- [ ] Drag from desktop (external files)
-- [ ] File picker dialog for adding references
-- [ ] Reference limit enforcement (14 max)
-- [ ] Clear all / remove individual references
+- [x] Reference images state management (React hook: `useReferenceBar`)
+- [x] Reference bar component with thumbnails (`ReferenceBar.tsx`, `ReferenceItem.tsx`)
+- [x] Click-to-add from gallery (blue "+" button on thumbnails, "+ Reference" on latest)
+- [x] Drop from desktop via Tauri file drop events (visual drop zone overlay)
+- [x] File picker dialog for adding references (`@tauri-apps/plugin-dialog`)
+- [x] Reference limit enforcement (14 max, counter shows `X/14`)
+- [x] Clear all / remove individual references (× button on each thumbnail)
+- [x] **Send to Claude** button - injects reference paths into terminal
+- [x] Terminal integration via `forwardRef` and `useImperativeHandle`
 
-### Phase 4: Polish & Features
+**Note**: HTML5 drag-and-drop from gallery didn't work reliably in Tauri webview, so click-based "+" buttons were implemented instead. Desktop file drops work via Tauri's native `tauri://drag-drop` event.
+
+### Phase 4: Context & Session Management
+
+**Approach: Hybrid (Statusline + PTY Commands + File Access)**
+
+This phase implements real-time context tracking and session management using three complementary data sources:
+
+| Component | Data Source | Method |
+|-----------|-------------|--------|
+| Context Usage | Statusline | Claude writes JSON → Rust watches file → Frontend updates |
+| Session Actions | PTY | Send `/clear`, `/compact` commands to stdin |
+| Session List | File System | Read `~/.claude/projects/` JSONL files |
+
+#### 4.1 Context Usage Bar (Statusline Integration)
+
+- [x] Configure Claude Code statusline to write JSON to temp file
+  - Create statusline script: `~/.claude/statusline-offers-studio.sh`
+  - Script writes JSON to: `/tmp/offers-studio-context.json`
+  - Configure in Claude settings: `"statusline": "~/.claude/statusline-offers-studio.sh"`
+- [x] Rust: File watcher for statusline JSON file
+  - Watch `/tmp/offers-studio-context.json` for changes
+  - Parse JSON and emit `context-updated` event to frontend
+- [x] Frontend: Context usage store (React hook)
+  - Track: `inputTokens`, `outputTokens`, `contextWindowSize`, `percentage`
+- [x] Frontend: ContextBar component
+  - Progress bar with percentage (e.g., `████████░░ 67%`)
+  - Token count display (e.g., `134K / 200K tokens`)
+  - Color coding: green (<50%), yellow (50-80%), red (>80%)
+- [x] Frontend: ContextBreakdown component (expandable)
+  - Input tokens, output tokens, cache tokens breakdown
+  - Tooltip with detailed stats
+
+**Statusline JSON Format (from Claude Code):**
+```json
+{
+  "context_window": {
+    "total_input_tokens": 134000,
+    "total_output_tokens": 45000,
+    "context_window_size": 200000,
+    "current_usage": {
+      "input_tokens": 12000,
+      "output_tokens": 3000,
+      "cache_creation_input_tokens": 5000,
+      "cache_read_input_tokens": 114000
+    }
+  }
+}
+```
+
+**Statusline Script (`~/.claude/statusline-offers-studio.sh`):**
+```bash
+#!/bin/bash
+# Receives JSON on stdin from Claude Code
+# Writes to temp file for Offers Studio to read
+cat > /tmp/offers-studio-context.json
+```
+
+#### 4.2 Session Actions (PTY Commands)
+
+- [x] Frontend: SessionActions component
+  - "Clear" button → sends `/clear\n` to PTY
+  - "Compact" button → sends `/compact\n` to PTY
+  - Confirmation dialog before destructive actions
+- [x] Add `sendCommand` helper to PTY hook
+  - `sendCommand(command: string)` → writes to PTY stdin
+- [x] Visual feedback after action (confirmation dialog)
+- [x] Disable buttons while command is executing
+
+#### 4.3 Session Manager (File System Access)
+
+- [x] Rust: Session file parser (`sessions.rs`)
+  - Read `~/.claude/projects/` directory structure
+  - Parse JSONL files to extract session metadata
+  - Return: `sessionId`, `timestamp`, `firstMessage`, `messageCount`
+- [x] Rust: Tauri commands
+  - `list_sessions(project_path)` → returns session list
+  - `get_session_preview(session_id)` → returns first few messages
+  - `get_session_names()` → returns custom session names
+  - `set_session_name(id, name)` → saves custom session name
+- [x] Frontend: Session state (React hook)
+  - `sessions[]`, `currentSessionId`, `isLoading`, `searchQuery`
+- [x] Frontend: SessionManager component
+  - Slide-in panel from right side
+  - List of sessions sorted by date (newest first)
+  - Each session shows: date, time, preview text, message count
+  - Search/filter functionality
+  - Keyboard shortcut: Cmd+H
+- [x] Frontend: SessionCard component
+  - Click to resume (spawns new Claude with `--resume [uuid]`)
+  - Session name/tag (stored in local metadata file)
+  - Rename button to set custom name
+  - Current session highlighted
+- [x] Frontend: SessionNameDialog
+  - Add custom name to session for easy identification
+  - Store in `~/.claude/offers-studio-session-names.json`
+  - Validation (1-50 characters)
+
+**Session Metadata Structure:**
+```typescript
+interface SessionInfo {
+  id: string;              // UUID from filename
+  projectPath: string;     // Encoded project path
+  timestamp: Date;         // From first message
+  firstMessage: string;    // Preview text (truncated)
+  messageCount: number;    // Total messages in session
+  customName?: string;     // User-assigned name (from local storage)
+}
+```
+
+**Session Storage Locations:**
+```
+~/.claude/
+├── projects/
+│   └── [encoded-project-path]/
+│       ├── abc123-def456-....jsonl  # Session files
+│       └── xyz789-....jsonl
+└── offers-studio-session-names.json  # Custom names (our file)
+```
+
+#### 4.4 UI Integration
+
+- [ ] Add context bar to status bar area (bottom of window)
+- [ ] Add session actions to terminal toolbar
+- [ ] Add session manager toggle button (drawer/panel)
+- [ ] Keyboard shortcuts:
+  - `Cmd+K` → Clear session (with confirmation)
+  - `Cmd+Shift+K` → Compact session
+  - `Cmd+S` → Toggle session manager
+
+#### 4.5 Resume Session Flow
+
+When user clicks "Resume" on a session:
+1. Kill current PTY process
+2. Spawn new Claude with: `claude --resume [session-uuid]`
+3. Update `currentSessionId` in store
+4. Context bar resets and starts tracking new session
+
+### Phase 5: Polish & Features
 
 - [ ] Resizable panels with persist state
 - [ ] Keyboard shortcuts (toggle panels, focus terminal)
@@ -1702,7 +2694,7 @@ Use a tool like `tauri icon` or [makeappicon.com](https://makeappicon.com) to ge
 - [ ] Theme customization
 - [ ] Window state persistence (size, position)
 
-### Phase 5: Distribution
+### Phase 6: Distribution
 
 - [x] App icon design (Sparkle Frame concept - see [App Icon & Branding](#app-icon--branding))
 - [x] Generate icon sizes for all platforms (32x32, 128x128, 256x256, .icns, .ico)

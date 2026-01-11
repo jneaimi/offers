@@ -8,6 +8,7 @@
 - `prompt` - Prompt engineering
 - `uv` - UV package manager
 - `ui` - UI/Frontend component issues
+- `claude-code` - Claude Code CLI configuration
 
 ### By Error Type
 - `rate-limit` - Rate limiting errors
@@ -57,8 +58,19 @@
 | Issue | Tags | Severity |
 |-------|------|----------|
 | [Scroll Propagation in Sidebar](ui/scroll-propagation-sidebar.md) | ui, scroll, radix | medium |
+| [Drag-Drop Not Working in Tauri](ui/drag-drop-not-working-tauri.md) | ui, tauri, drag-drop, webview | medium |
+
+#### Claude Code Issues (`claude-code/`)
+| Issue | Tags | Severity |
+|-------|------|----------|
+| [Statusline Configuration](claude-code/statusline-configuration.md) | claude-code, statusline, configuration | medium |
 
 ### Recent Additions
+- 2026-01-11: Claude Code statusline configuration documented
+  - Correct format: `statusLine: { type: "command", command: "path" }` (not string)
+  - Nested JSON fields: `context_window.total_input_tokens`, etc.
+- 2026-01-10: Tauri drag-drop workaround documented
+  - HTML5 drag-drop doesn't work in Tauri webview, use click buttons instead
 - 2026-01-07: Initial KB entries created
   - API authentication issues (4 entries)
   - Generation issues (2 entries)

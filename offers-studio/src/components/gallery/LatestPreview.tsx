@@ -3,22 +3,38 @@ import { ImageFile } from '../../lib/types';
 interface LatestPreviewProps {
   image: ImageFile;
   onView: () => void;
+  onAddToReferences?: (path: string) => void;
 }
 
 /**
  * LatestPreview - Large preview of the most recent image
  */
-export function LatestPreview({ image, onView }: LatestPreviewProps) {
+export function LatestPreview({ image, onView, onAddToReferences }: LatestPreviewProps) {
+  const handleAddToReferences = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onAddToReferences?.(image.path);
+  };
+
   return (
     <div className="border-b border-gray-700 p-4">
       <div className="mb-2 flex items-center justify-between">
         <h3 className="text-xs font-medium text-gray-400">Latest</h3>
-        <button
-          onClick={onView}
-          className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
-        >
-          View Full
-        </button>
+        <div className="flex items-center gap-2">
+          {onAddToReferences && (
+            <button
+              onClick={handleAddToReferences}
+              className="text-xs text-green-400 hover:text-green-300 transition-colors"
+            >
+              + Reference
+            </button>
+          )}
+          <button
+            onClick={onView}
+            className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            View Full
+          </button>
+        </div>
       </div>
 
       <div

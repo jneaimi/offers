@@ -2,24 +2,35 @@ import { useGallery } from '../../hooks/useGallery';
 import { LatestPreview } from './LatestPreview';
 import { ThumbnailGrid } from './ThumbnailGrid';
 import { ImageModal } from './ImageModal';
-import { open } from '@tauri-apps/plugin-shell';
+import { revealItemInDir } from '@tauri-apps/plugin-opener';
 
 interface GalleryPanelProps {
   projectPath: string;
+  onAddToReferences?: (path: string) => void;
 }
 
 /**
  * Gallery Panel - Main container for the image gallery
  * Displays latest preview and thumbnail grid
  */
-export function GalleryPanel({ projectPath }: GalleryPanelProps) {
+export function GalleryPanel({ projectPath, onAddToReferences }: GalleryPanelProps) {
   const { images, loading, error, selectedImage, selectImage } = useGallery(projectPath);
 
   const handleOpenFolder = async () => {
     try {
-      await open(`${projectPath}/generated_images`);
+      const folderPath = `${projectPath}/generated_images`;
+      console.log('Opening folder:', folderPath);
+      // Use revealItemInDir to open folder in Finder
+      await revealItemInDir(folderPath);
     } catch (err) {
       console.error('Failed to open folder:', err);
+      // Try opening the project path instead if generated_images doesn't exist
+      try {
+        await revealItemInDir(projectPath);
+      } catch (err2) {
+        console.error('Failed to open project folder:', err2);
+        alert(`Could not open folder: ${err}`);
+      }
     }
   };
 
@@ -82,12 +93,20 @@ export function GalleryPanel({ projectPath }: GalleryPanelProps) {
 
         {/* Latest Preview */}
         <div className="flex-none">
-          <LatestPreview image={images[0]} onView={() => selectImage(images[0])} />
+          <LatestPreview
+            image={images[0]}
+            onView={() => selectImage(images[0])}
+            onAddToReferences={onAddToReferences}
+          />
         </div>
 
         {/* Thumbnail Grid */}
         <div className="flex-1 overflow-hidden">
-          <ThumbnailGrid images={images} onSelectImage={selectImage} />
+          <ThumbnailGrid
+            images={images}
+            onSelectImage={selectImage}
+            onAddToReferences={onAddToReferences}
+          />
         </div>
       </div>
 

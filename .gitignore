@@ -14,5 +14,8 @@ __pycache__/
 *.swp
 *.swo
 
+# Generated images (can be regenerated)
+generated_images/
+
 # Do NOT ignore .claude - keep skills and configuration available
 # !.claude/

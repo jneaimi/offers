@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    offers_studio_lib::run()
+    genimage_studio_lib::run()
 }

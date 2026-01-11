@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Offers Studio",
+  "productName": "GenImage Studio",
   "version": "0.1.0",
-  "identifier": "com.offers.studio",
+  "identifier": "com.genimage.studio",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Offers Studio",
+        "title": "GenImage Studio",
         "width": 1200,
         "height": 800
       }
@@ -24,7 +24,8 @@
         "scope": [
           "$RESOURCE/**",
           "$APPDATA/**",
-          "/Users/jneaimimacmini/dev/apps/offers/**"
+          "$HOME/**",
+          "**"
         ]
       }
     }
@@ -38,6 +39,9 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
+    ],
+    "resources": [
+      "../bundled-resources"
     ]
   },
   "plugins": {}

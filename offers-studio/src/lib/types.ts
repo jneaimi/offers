@@ -33,3 +33,35 @@ export interface FileWatcherEvent {
   path: string;
   timestamp: string;
 }
+
+export interface ReferenceImage {
+  id: string;
+  path: string;
+  filename: string;
+  thumbnailUrl?: string;
+}
+
+export interface ReferenceBarState {
+  references: ReferenceImage[];
+  maxReferences: number;
+}
+
+export interface ContextUsage {
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  contextWindowSize: number;
+  percentage: number;
+  currentInput: number;
+  currentOutput: number;
+  cacheCreationTokens: number;
+  cacheReadTokens: number;
+}
+
+export interface SessionInfo {
+  id: string;
+  project_path: string;
+  timestamp: string;
+  first_message: string;
+  message_count: number;
+  custom_name?: string;
+}
