@@ -85,7 +85,7 @@ jobs:
       - name: Create and Sign MSIX package
         shell: pwsh
         run: |
-          $version = "0.1.2"
+          $version = "0.1.3"
           $appName = "GenImageStudio"
           # Publisher must match EXACTLY what's in the certificate Subject
           $publisher = "CN=Jneaimi, E=jneaimi@gmail.com"
@@ -130,7 +130,7 @@ jobs:
           $manifest += "  <Identity Name=`"$appName`" Publisher=`"$publisher`" Version=`"${version}.0`" ProcessorArchitecture=`"x64`"/>" + $nl
           $manifest += '  <Properties>' + $nl
           $manifest += '    <DisplayName>GenImage Studio</DisplayName>' + $nl
-          $manifest += '    <PublisherDisplayName>Jneaimi</PublisherDisplayName>' + $nl
+          $manifest += '    <PublisherDisplayName>Jasem Al Nauimi</PublisherDisplayName>' + $nl
           $manifest += '    <Logo>Assets\StoreLogo.png</Logo>' + $nl
           $manifest += '  </Properties>' + $nl
           $manifest += '  <Dependencies>' + $nl

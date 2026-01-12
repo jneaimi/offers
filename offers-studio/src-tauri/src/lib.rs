@@ -113,10 +113,28 @@ fn install_statusline() -> Result<String, String> {
     }
 
     // Write the statusline script
+    // Uses CLAUDE_PROJECT_PATH env var (set by Claude Code) to compute project-specific hash
     let script_content = r#"#!/bin/bash
-# Offers Studio Statusline Script
+# GenImage Studio Statusline Script
 # This script is invoked by Claude Code to write context information
-cat > /tmp/genimage-studio-context.json
+# It uses a project-specific file path based on MD5 hash of the project path
+
+PROJECT_PATH="${CLAUDE_PROJECT_PATH:-$(pwd)}"
+
+# Compute MD5 hash (first 8 chars) - compatible with macOS and Linux
+if command -v md5 &> /dev/null; then
+    # macOS
+    HASH=$(echo -n "$PROJECT_PATH" | md5 | cut -c1-8)
+elif command -v md5sum &> /dev/null; then
+    # Linux
+    HASH=$(echo -n "$PROJECT_PATH" | md5sum | cut -c1-8)
+else
+    # Fallback - use a fixed name
+    HASH="default"
+fi
+
+# Write the context JSON to the project-specific file
+cat > "/tmp/genimage-studio-context-${HASH}.json"
 "#;
 
     fs::write(&script_path, script_content)
@@ -135,6 +153,58 @@ cat > /tmp/genimage-studio-context.json
     }
 
     Ok(script_path.to_string_lossy().to_string())
+}
+
+/// Configure Claude Code's settings.json to use our statusline script
+#[tauri::command]
+fn configure_claude_statusline() -> Result<bool, String> {
+    let script_path = get_statusline_script_path()?;
+
+    // Get Claude Code settings path
+    let home_dir = dirs::home_dir()
+        .ok_or_else(|| "Could not find home directory".to_string())?;
+    let settings_path = home_dir.join(".claude").join("settings.json");
+
+    // Read existing settings or create default
+    let mut settings: serde_json::Value = if settings_path.exists() {
+        let content = fs::read_to_string(&settings_path)
+            .map_err(|e| format!("Failed to read settings.json: {}", e))?;
+        serde_json::from_str(&content)
+            .map_err(|e| format!("Failed to parse settings.json: {}", e))?
+    } else {
+        serde_json::json!({})
+    };
+
+    // Ensure settings is an object
+    let settings_obj = settings.as_object_mut()
+        .ok_or_else(|| "settings.json is not a JSON object".to_string())?;
+
+    // Check if statusLine is already configured correctly
+    let script_path_str = script_path.to_string_lossy().to_string();
+    let needs_update = match settings_obj.get("statusLine") {
+        Some(sl) => {
+            sl.get("command").and_then(|c| c.as_str()) != Some(&script_path_str)
+        }
+        None => true
+    };
+
+    if needs_update {
+        // Update statusLine configuration
+        settings_obj.insert("statusLine".to_string(), serde_json::json!({
+            "type": "command",
+            "command": script_path_str
+        }));
+
+        // Write back to settings.json
+        let content = serde_json::to_string_pretty(&settings)
+            .map_err(|e| format!("Failed to serialize settings: {}", e))?;
+        fs::write(&settings_path, content)
+            .map_err(|e| format!("Failed to write settings.json: {}", e))?;
+
+        Ok(true) // Settings were updated
+    } else {
+        Ok(false) // No update needed
+    }
 }
 
 /// Check if the statusline script is installed and executable
@@ -320,6 +390,7 @@ pub fn run() {
             stop_watcher,
             list_images,
             install_statusline,
+            configure_claude_statusline,
             check_statusline,
             get_statusline_path,
             start_context_watcher,
@@ -333,7 +404,12 @@ pub fn run() {
             setup::copy_bundled_resources,
             setup::save_api_key,
             setup::set_project_path,
-            setup::get_project_path
+            setup::get_project_path,
+            setup::get_standard_project_path,
+            setup::init_standard_project_path,
+            setup::check_uv_installed,
+            setup::get_uv_version,
+            setup::install_uv
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {

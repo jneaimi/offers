@@ -3,6 +3,7 @@
 
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::sync::Mutex;
 use serde::Serialize;
 use tauri::{AppHandle, Manager, State};
@@ -33,6 +34,111 @@ pub struct SetupStatus {
     pub has_api_key: bool,
     pub has_claude_config: bool,
     pub project_path: String,
+}
+
+/// Get the standard project path for this platform
+/// macOS/Linux: ~/Documents/GenImage Studio/
+/// Windows: %USERPROFILE%\Documents\GenImage Studio\
+#[tauri::command]
+pub fn get_standard_project_path() -> Result<String, String> {
+    let home_dir = dirs::home_dir()
+        .ok_or_else(|| "Could not find home directory".to_string())?;
+
+    let documents_dir = home_dir.join("Documents");
+    let project_dir = documents_dir.join("GenImage Studio");
+
+    Ok(project_dir.to_string_lossy().to_string())
+}
+
+/// Initialize the standard project directory
+/// Creates the directory if it doesn't exist and returns the path
+#[tauri::command]
+pub fn init_standard_project_path() -> Result<String, String> {
+    let project_path = get_standard_project_path()?;
+    let path = PathBuf::from(&project_path);
+
+    // Create the directory if it doesn't exist
+    if !path.exists() {
+        fs::create_dir_all(&path)
+            .map_err(|e| format!("Failed to create project directory: {}", e))?;
+    }
+
+    Ok(project_path)
+}
+
+/// Check if UV (Python package manager) is installed
+#[tauri::command]
+pub fn check_uv_installed() -> Result<bool, String> {
+    let output = Command::new("uv")
+        .arg("--version")
+        .output();
+
+    match output {
+        Ok(out) => Ok(out.status.success()),
+        Err(_) => Ok(false),
+    }
+}
+
+/// Get UV version if installed
+#[tauri::command]
+pub fn get_uv_version() -> Result<Option<String>, String> {
+    let output = Command::new("uv")
+        .arg("--version")
+        .output();
+
+    match output {
+        Ok(out) if out.status.success() => {
+            let version = String::from_utf8_lossy(&out.stdout).trim().to_string();
+            Ok(Some(version))
+        }
+        _ => Ok(None),
+    }
+}
+
+/// Install UV using the official installer
+/// On macOS/Linux: Uses curl to download and run the install script
+/// On Windows: Uses PowerShell to download and run the install script
+#[tauri::command]
+pub fn install_uv() -> Result<String, String> {
+    #[cfg(target_os = "windows")]
+    {
+        // Windows: Use PowerShell
+        let output = Command::new("powershell")
+            .args([
+                "-ExecutionPolicy", "ByPass",
+                "-Command",
+                "irm https://astral.sh/uv/install.ps1 | iex"
+            ])
+            .output()
+            .map_err(|e| format!("Failed to run PowerShell: {}", e))?;
+
+        if output.status.success() {
+            Ok("UV installed successfully. You may need to restart the terminal.".to_string())
+        } else {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            Err(format!("UV installation failed: {}", stderr))
+        }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        // macOS/Linux: Use curl and sh
+        let output = Command::new("sh")
+            .args([
+                "-c",
+                "curl -LsSf https://astral.sh/uv/install.sh | sh"
+            ])
+            .output()
+            .map_err(|e| format!("Failed to run installer: {}", e))?;
+
+        if output.status.success() {
+            // Source the shell profile to make uv available immediately
+            Ok("UV installed successfully. You may need to restart the terminal or run: source ~/.local/bin/env".to_string())
+        } else {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            Err(format!("UV installation failed: {}", stderr))
+        }
+    }
 }
 
 /// Get the project path - either from parameter, state, or current directory
@@ -138,32 +244,48 @@ pub fn copy_bundled_resources(
 
     // Get the path to bundled resources
     // Try multiple locations: resource_dir (production) and dev paths
-    let resource_path = app.path()
-        .resource_dir()
-        .map_err(|e| format!("Failed to get resource directory: {}", e))?
-        .join("bundled-resources");
 
-    // In dev mode, resources might be at ../bundled-resources relative to src-tauri
+    // Primary: Tauri's resource_dir (production apps)
+    // On macOS: GenImage Studio.app/Contents/Resources/bundled-resources
+    // On Windows: {exe_dir}/bundled-resources
+    // On Linux: {exe_dir}/bundled-resources
+    let resource_dir = app.path()
+        .resource_dir()
+        .map_err(|e| format!("Failed to get resource directory: {}", e))?;
+    let resource_path = resource_dir.join("bundled-resources");
+
+    // Dev mode: relative to current working directory (src-tauri)
     let dev_resource_path = std::env::current_dir()
         .map(|p| p.join("../bundled-resources"))
         .unwrap_or_default();
 
-    // Also try relative to the executable
-    let exe_resource_path = std::env::current_exe()
+    // macOS bundle fallback: Resources directory relative to executable
+    // Executable is at: App.app/Contents/MacOS/app-name
+    // Resources are at: App.app/Contents/Resources/bundled-resources
+    let macos_resource_path = std::env::current_exe()
         .ok()
-        .and_then(|p| p.parent().map(|p| p.join("../../../bundled-resources")))
+        .and_then(|p| p.parent().map(|p| p.join("../Resources/bundled-resources")))
         .unwrap_or_default();
 
+    // Log paths for debugging
+    eprintln!("Looking for bundled resources:");
+    eprintln!("  - resource_dir: {:?} (exists: {})", resource_path, resource_path.exists());
+    eprintln!("  - dev_path: {:?} (exists: {})", dev_resource_path, dev_resource_path.exists());
+    eprintln!("  - macos_path: {:?} (exists: {})", macos_resource_path, macos_resource_path.exists());
+
     let final_resource_path = if resource_path.exists() {
+        eprintln!("Using resource_dir path");
         resource_path
     } else if dev_resource_path.exists() {
+        eprintln!("Using dev path");
         dev_resource_path
-    } else if exe_resource_path.exists() {
-        exe_resource_path
+    } else if macos_resource_path.exists() {
+        eprintln!("Using macOS bundle path");
+        macos_resource_path
     } else {
         return Err(format!(
-            "Bundled resources not found. Checked:\n- {:?}\n- {:?}\n- {:?}",
-            resource_path, dev_resource_path, exe_resource_path
+            "Bundled resources not found. Checked:\n- {:?}\n- {:?}\n- {:?}\nPlease reinstall the application.",
+            resource_path, dev_resource_path, macos_resource_path
         ));
     };
 

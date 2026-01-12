@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { open } from '@tauri-apps/plugin-dialog';
 
 interface SetupStatus {
   is_complete: boolean;
@@ -12,13 +11,19 @@ interface SetupStatus {
   project_path: string;
 }
 
+interface UvStatus {
+  installed: boolean;
+  version: string | null;
+}
+
 interface SetupWizardProps {
   onComplete: (projectPath: string) => void;
 }
 
 export function SetupWizard({ onComplete }: SetupWizardProps) {
-  const [step, setStep] = useState<'checking' | 'select' | 'copy' | 'apikey' | 'complete'>('checking');
+  const [step, setStep] = useState<'checking' | 'uv' | 'setup' | 'apikey' | 'complete'>('checking');
   const [status, setStatus] = useState<SetupStatus | null>(null);
+  const [uvStatus, setUvStatus] = useState<UvStatus>({ installed: false, version: null });
   const [projectPath, setProjectPath] = useState<string>('');
   const [apiKey, setApiKey] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -26,84 +31,114 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
 
   // Check setup status on mount
   useEffect(() => {
-    checkSetup();
+    initializeSetup();
   }, []);
 
-  const checkSetup = async (customPath?: string) => {
+  const checkUvStatus = async (): Promise<UvStatus> => {
     try {
-      const result = await invoke<SetupStatus>('check_setup', {
-        projectPath: customPath || undefined
-      });
-      setStatus(result);
-      setProjectPath(result.project_path);
-
-      if (result.is_complete) {
-        setStep('complete');
-        onComplete(result.project_path);
-      } else {
-        // Always show select step first to let user choose/confirm path
-        setStep('select');
+      const installed = await invoke<boolean>('check_uv_installed');
+      let version: string | null = null;
+      if (installed) {
+        version = await invoke<string | null>('get_uv_version');
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to check setup status');
-      setStep('select');
+      return { installed, version };
+    } catch {
+      return { installed: false, version: null };
     }
   };
 
-  const handleSelectFolder = async () => {
+  const initializeSetup = async () => {
     try {
-      const selected = await open({
-        directory: true,
-        multiple: false,
-        title: 'Select Project Folder',
-      });
+      // Get the standard project path
+      const standardPath = await invoke<string>('get_standard_project_path');
+      setProjectPath(standardPath);
 
-      if (selected && typeof selected === 'string') {
-        setProjectPath(selected);
-        // Re-check setup status for the selected folder
-        const result = await invoke<SetupStatus>('check_setup', {
-          projectPath: selected
-        });
-        setStatus(result);
+      // Check UV status
+      const uv = await checkUvStatus();
+      setUvStatus(uv);
+
+      if (!uv.installed) {
+        setStep('uv');
+        return;
       }
+
+      // Check if setup is already complete
+      await checkSetupStatus(standardPath);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to select folder');
+      setError(err instanceof Error ? err.message : 'Failed to initialize');
+      setStep('setup');
     }
   };
 
-  const handleConfirmPath = async () => {
-    if (!projectPath) {
-      setError('Please select a project folder');
-      return;
-    }
-
-    // Set the project path in the backend
+  const checkSetupStatus = async (path: string) => {
     try {
-      await invoke('set_project_path', { projectPath });
+      // Initialize the project directory (creates if needed)
+      await invoke('init_standard_project_path');
+      await invoke('set_project_path', { projectPath: path });
 
-      // Re-check status for this path
-      const result = await invoke<SetupStatus>('check_setup', { projectPath });
+      const result = await invoke<SetupStatus>('check_setup', { projectPath: path });
       setStatus(result);
 
       if (result.is_complete) {
         setStep('complete');
-        onComplete(projectPath);
+        onComplete(path);
       } else if (!result.has_claude_md || !result.has_generate_script || !result.has_claude_config) {
-        setStep('copy');
+        setStep('setup');
       } else if (!result.has_api_key) {
         setStep('apikey');
+      } else {
+        setStep('setup');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to set project path');
+      setError(err instanceof Error ? err.message : 'Failed to check setup');
+      setStep('setup');
     }
   };
 
-  const handleCopyResources = async () => {
+  const handleInstallUv = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
+      await invoke<string>('install_uv');
+
+      // Wait for installation to settle
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const uv = await checkUvStatus();
+      setUvStatus(uv);
+
+      if (uv.installed) {
+        await checkSetupStatus(projectPath);
+      } else {
+        setError('UV was installed but may require a terminal restart. Please restart the app.');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to install UV');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSkipUv = () => {
+    checkSetupStatus(projectPath);
+  };
+
+  const handleSetup = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Copy bundled resources
       await invoke('copy_bundled_resources', { projectPath });
+
+      // Configure statusline for context tracking
+      try {
+        await invoke('install_statusline');
+        await invoke('configure_claude_statusline');
+      } catch {
+        // Non-fatal
+      }
+
       // Re-check status
       const result = await invoke<SetupStatus>('check_setup', { projectPath });
       setStatus(result);
@@ -115,7 +150,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
         setStep('apikey');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to copy resources');
+      setError(err instanceof Error ? err.message : 'Failed to set up project');
     } finally {
       setIsLoading(false);
     }
@@ -164,8 +199,8 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-white mb-2">GenImage Studio Setup</h1>
           <p className="text-gray-400">
-            {step === 'select' && 'Choose your project folder'}
-            {step === 'copy' && 'Setting up project files...'}
+            {step === 'uv' && 'Install required dependencies'}
+            {step === 'setup' && 'Set up your workspace'}
             {step === 'apikey' && 'Configure your Google API key'}
             {step === 'complete' && 'Setup complete!'}
           </p>
@@ -173,9 +208,9 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
 
         {/* Progress Indicator */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          <div className={`w-3 h-3 rounded-full ${['select', 'copy', 'apikey', 'complete'].includes(step) ? 'bg-blue-500' : 'bg-gray-600'}`} />
-          <div className={`w-8 h-0.5 ${['copy', 'apikey', 'complete'].includes(step) ? 'bg-blue-500' : 'bg-gray-600'}`} />
-          <div className={`w-3 h-3 rounded-full ${['copy', 'apikey', 'complete'].includes(step) ? 'bg-blue-500' : 'bg-gray-600'}`} />
+          <div className={`w-3 h-3 rounded-full ${['uv', 'setup', 'apikey', 'complete'].includes(step) ? 'bg-blue-500' : 'bg-gray-600'}`} />
+          <div className={`w-8 h-0.5 ${['setup', 'apikey', 'complete'].includes(step) ? 'bg-blue-500' : 'bg-gray-600'}`} />
+          <div className={`w-3 h-3 rounded-full ${['setup', 'apikey', 'complete'].includes(step) ? 'bg-blue-500' : 'bg-gray-600'}`} />
           <div className={`w-8 h-0.5 ${['apikey', 'complete'].includes(step) ? 'bg-blue-500' : 'bg-gray-600'}`} />
           <div className={`w-3 h-3 rounded-full ${['apikey', 'complete'].includes(step) ? 'bg-blue-500' : 'bg-gray-600'}`} />
           <div className={`w-8 h-0.5 ${step === 'complete' ? 'bg-blue-500' : 'bg-gray-600'}`} />
@@ -189,82 +224,84 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
           </div>
         )}
 
-        {/* Step: Select Folder */}
-        {step === 'select' && (
+        {/* Step: UV Installation */}
+        {step === 'uv' && (
           <div>
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Project Folder
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={projectPath}
-                  onChange={(e) => setProjectPath(e.target.value)}
-                  placeholder="Select or enter project path"
-                  className="flex-1 px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 text-sm"
-                />
-                <button
-                  onClick={handleSelectFolder}
-                  className="px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
-                  title="Browse folders"
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                  </svg>
-                </button>
+            <div className="bg-yellow-900/30 border border-yellow-700/50 rounded-lg p-4 mb-6">
+              <div className="flex items-start gap-3">
+                <div className="text-yellow-400 text-xl">⚠️</div>
+                <div>
+                  <h3 className="text-yellow-200 font-medium mb-1">Python UV Required</h3>
+                  <p className="text-yellow-200/70 text-sm">
+                    GenImage Studio uses UV to run Python scripts for image generation.
+                  </p>
+                </div>
               </div>
-              <p className="mt-2 text-sm text-gray-400">
-                Choose where to set up your image generation project
-              </p>
             </div>
 
-            {/* Show current status for selected path */}
-            {status && projectPath && (
-              <div className="bg-gray-700/50 rounded-lg p-4 mb-6">
-                <h3 className="text-white font-medium mb-3 text-sm">Status for selected folder:</h3>
-                <ul className="space-y-1 text-sm">
-                  <li className="flex items-center gap-2 text-gray-300">
-                    <span className={status.has_claude_md ? 'text-green-400' : 'text-gray-500'}>
-                      {status.has_claude_md ? '✓' : '○'}
-                    </span>
-                    CLAUDE.md
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-300">
-                    <span className={status.has_generate_script ? 'text-green-400' : 'text-gray-500'}>
-                      {status.has_generate_script ? '✓' : '○'}
-                    </span>
-                    generate-image.py
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-300">
-                    <span className={status.has_claude_config ? 'text-green-400' : 'text-gray-500'}>
-                      {status.has_claude_config ? '✓' : '○'}
-                    </span>
-                    .claude/ config
-                  </li>
-                  <li className="flex items-center gap-2 text-gray-300">
-                    <span className={status.has_api_key ? 'text-green-400' : 'text-gray-500'}>
-                      {status.has_api_key ? '✓' : '○'}
-                    </span>
-                    API key configured
-                  </li>
-                </ul>
+            <div className="bg-gray-700/50 rounded-lg p-4 mb-6">
+              <h3 className="text-white font-medium mb-3">What is UV?</h3>
+              <ul className="space-y-2 text-sm text-gray-300">
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-400 mt-0.5">•</span>
+                  <span>Lightning-fast Python package installer</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-400 mt-0.5">•</span>
+                  <span>Automatically manages dependencies</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-400 mt-0.5">•</span>
+                  <span>No manual setup required</span>
+                </li>
+              </ul>
+            </div>
+
+            {uvStatus.installed && uvStatus.version && (
+              <div className="bg-green-900/30 border border-green-700/50 rounded-lg p-3 mb-6">
+                <div className="flex items-center gap-2 text-green-300">
+                  <span>✓</span>
+                  <span>UV installed: {uvStatus.version}</span>
+                </div>
               </div>
             )}
 
-            <button
-              onClick={handleConfirmPath}
-              disabled={!projectPath}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
-            >
-              Continue with this folder
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={handleSkipUv}
+                className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 font-medium rounded-lg transition-colors"
+              >
+                Skip
+              </button>
+              <button
+                onClick={handleInstallUv}
+                disabled={isLoading}
+                className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+              >
+                {isLoading ? 'Installing...' : 'Install UV'}
+              </button>
+            </div>
+
+            <p className="mt-4 text-xs text-gray-500 text-center">
+              Official installer from{' '}
+              <a href="https://astral.sh/uv" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                astral.sh/uv
+              </a>
+            </p>
           </div>
         )}
 
-        {/* Step: Copy Resources */}
-        {step === 'copy' && (
+        {/* Step: Setup */}
+        {step === 'setup' && (
           <div>
+            <div className="bg-gray-700/50 rounded-lg p-4 mb-6">
+              <h3 className="text-white font-medium mb-3">Workspace Location</h3>
+              <code className="text-blue-400 text-sm break-all">{projectPath}</code>
+              <p className="text-gray-400 text-sm mt-2">
+                Your generated images and project files will be stored here.
+              </p>
+            </div>
+
             <div className="bg-gray-700/50 rounded-lg p-4 mb-6">
               <h3 className="text-white font-medium mb-3">Files to be created:</h3>
               <ul className="space-y-2 text-sm">
@@ -278,7 +315,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                   <span className={status?.has_generate_script ? 'text-green-400' : 'text-yellow-400'}>
                     {status?.has_generate_script ? '✓' : '○'}
                   </span>
-                  generate-image.py - Image generation script
+                  generate-image.py - Image generation
                 </li>
                 <li className="flex items-center gap-2 text-gray-300">
                   <span className={status?.has_claude_config ? 'text-green-400' : 'text-yellow-400'}>
@@ -288,30 +325,18 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                 </li>
                 <li className="flex items-center gap-2 text-gray-300">
                   <span className="text-yellow-400">○</span>
-                  generated_images/ - Output directory
+                  generated_images/ - Output folder
                 </li>
               </ul>
             </div>
 
-            <div className="text-sm text-gray-400 mb-6">
-              Project path: <code className="text-blue-400 break-all">{projectPath}</code>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setStep('select')}
-                className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 font-medium rounded-lg transition-colors"
-              >
-                Back
-              </button>
-              <button
-                onClick={handleCopyResources}
-                disabled={isLoading}
-                className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
-              >
-                {isLoading ? 'Setting up...' : 'Setup Project Files'}
-              </button>
-            </div>
+            <button
+              onClick={handleSetup}
+              disabled={isLoading}
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+            >
+              {isLoading ? 'Setting up...' : 'Set Up Workspace'}
+            </button>
           </div>
         )}
 
@@ -365,8 +390,11 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
           <div className="text-center">
             <div className="text-5xl mb-4">✓</div>
             <h3 className="text-xl font-medium text-white mb-2">You're all set!</h3>
-            <p className="text-gray-400 mb-6">
+            <p className="text-gray-400 mb-2">
               GenImage Studio is ready to generate images.
+            </p>
+            <p className="text-gray-500 text-sm mb-6">
+              Workspace: <code className="text-blue-400">{projectPath}</code>
             </p>
             <button
               onClick={() => onComplete(projectPath)}

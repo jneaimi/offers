@@ -20,7 +20,18 @@ export const ContextBar = forwardRef<ContextBarHandle>(function ContextBar(_prop
     return (
       <div className="flex-none h-8 bg-gray-800/50 border-t border-gray-700 px-4 flex items-center justify-center">
         <div className="text-xs text-gray-500">
-          Context tracking available • Run <code className="text-gray-400 bg-gray-700 px-1 rounded">/statusline</code> in Claude Code to enable
+          Context tracking unavailable • Restart the app to enable
+        </div>
+      </div>
+    );
+  }
+
+  // If statusline is configured but no data yet, show waiting message
+  if (!context) {
+    return (
+      <div className="flex-none h-8 bg-gray-800/50 border-t border-gray-700 px-4 flex items-center justify-center">
+        <div className="text-xs text-gray-500">
+          Context tracking ready • Start chatting to see usage
         </div>
       </div>
     );

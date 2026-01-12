@@ -6,7 +6,8 @@
       "WebFetch(domain:github.com)",
       "Edit(.claude/implementation-plans/**)",
       "Edit(.claude/knowledge-base/**)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(npx tsc:*)"
     ],
     "additionalDirectories": [
       ".claude"

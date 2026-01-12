@@ -81,8 +81,10 @@ except ImportError:
     PIL_AVAILABLE = False
 
 # Configuration
+# These will be set relative to the project root (where .env is found)
 OUTPUT_DIR = Path("generated_images")
 CONFIG_FILE = Path(".image-gen-config.json")
+PROJECT_ROOT = None  # Will be set by load_env()
 
 DEFAULT_CONFIG = {
     "default_model": "flash",
@@ -105,6 +107,8 @@ VALID_SIZES = ["1K", "2K", "4K"]
 
 def load_env():
     """Load environment variables from .env file with multiple fallback locations."""
+    global PROJECT_ROOT
+
     if DOTENV_AVAILABLE:
         # Try multiple .env locations in order of preference
         env_locations = [
@@ -117,12 +121,19 @@ def load_env():
         for env_path in env_locations:
             if env_path.exists():
                 load_dotenv(env_path)
+                # Set PROJECT_ROOT to the directory containing .env
+                PROJECT_ROOT = env_path.parent.resolve()
                 env_loaded = True
                 break
 
         if not env_loaded:
             # Try default load_dotenv() which searches up directory tree
             load_dotenv()
+            # Default to script directory if no .env found
+            PROJECT_ROOT = Path(__file__).parent.resolve()
+    else:
+        # No dotenv, default to script directory
+        PROJECT_ROOT = Path(__file__).parent.resolve()
 
     # Try GOOGLE_API_KEY first, then GEMINI_API_KEY
     api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
@@ -504,7 +515,9 @@ def test_generation(api_key: str, config: dict):
         )
 
         if result["images"]:
-            output_dir = Path(config.get("output_directory", "generated_images"))
+            # Use PROJECT_ROOT for consistent output location
+            default_output = config.get("output_directory", "generated_images")
+            output_dir = (PROJECT_ROOT / default_output) if PROJECT_ROOT else Path(default_output)
             filepath = save_image(result["images"][0], output_dir, "test")
             print(f"\n✅ Test successful!")
             print(f"Image saved to: {filepath}")
@@ -669,7 +682,19 @@ def main():
     model = args.model or config.get("default_model", "flash")
     aspect_ratio = args.aspect or config.get("default_aspect_ratio", "1:1")
     image_size = args.size or config.get("default_size", "2K")
-    output_dir = Path(args.output or config.get("output_directory", "generated_images"))
+
+    # Determine output directory - use PROJECT_ROOT to ensure images go to the right place
+    if args.output:
+        # User specified explicit output - use as-is if absolute, else relative to PROJECT_ROOT
+        output_path = Path(args.output)
+        if output_path.is_absolute():
+            output_dir = output_path
+        else:
+            output_dir = (PROJECT_ROOT / output_path) if PROJECT_ROOT else output_path
+    else:
+        # Default: always use PROJECT_ROOT/generated_images for gallery integration
+        default_output = config.get("output_directory", "generated_images")
+        output_dir = (PROJECT_ROOT / default_output) if PROJECT_ROOT else Path(default_output)
 
     # Validate reference images count
     if args.reference and len(args.reference) > 14:

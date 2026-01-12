@@ -33,7 +33,20 @@ export function useContextBar({ enabled = true, projectPath = '/Users/jneaimimac
     const setup = async () => {
       try {
         // Check if statusline is configured
-        const configured = await invoke<boolean>('check_statusline');
+        let configured = await invoke<boolean>('check_statusline');
+
+        // If not configured, try to auto-configure
+        if (!configured) {
+          try {
+            await invoke('install_statusline');
+            await invoke('configure_claude_statusline');
+            configured = await invoke<boolean>('check_statusline');
+            console.log('Auto-configured statusline for context tracking');
+          } catch (autoConfigErr) {
+            console.warn('Could not auto-configure statusline:', autoConfigErr);
+          }
+        }
+
         setStatuslineConfigured(configured);
 
         if (!configured || !enabledRef.current) {
