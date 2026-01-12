@@ -17,5 +17,10 @@ __pycache__/
 # Generated images (can be regenerated)
 generated_images/
 
+# Wrangler local state
+.wrangler/
+node_modules/.cache/wrangler/
+node_modules/.mf/
+
 # Do NOT ignore .claude - keep skills and configuration available
 # !.claude/
