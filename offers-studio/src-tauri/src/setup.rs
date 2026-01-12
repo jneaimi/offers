@@ -315,8 +315,9 @@ pub fn copy_bundled_resources(
             .map_err(|e| format!("Failed to copy .env.example: {}", e))?;
     }
 
-    // Copy .claude directory recursively
-    let claude_src = resource_path.join(".claude");
+    // Copy claude-config directory to .claude recursively
+    // (renamed from .claude because Tauri doesn't bundle hidden directories)
+    let claude_src = resource_path.join("claude-config");
     let claude_dst = cwd.join(".claude");
     if claude_src.exists() {
         copy_dir_recursive(&claude_src, &claude_dst)
